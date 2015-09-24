@@ -121,36 +121,20 @@
         <version>1.2</version>
         <configuration>
           <targetDirectory>.</targetDirectory>
-          <!--<patchDirectory>./files/patches</patchDirectory>-->
-          <!--<patches>-->
-            <!--<patch>bla2.patch</patch>-->
-          <!--</patches>-->
         </configuration>
 
         <executions>
-
           <execution>
             <id>patches</id>
             <configuration>
               <patchDirectory>files/patches</patchDirectory>
-              <patchTrackingFile>${project.build.directory}/optimization-files/bugfix/patches-applied.txt</patchTrackingFile>
-              <!--<naturalOrderProcessing>true</naturalOrderProcessing>-->
+              <patchTrackingFile>${project.build.directory}/patches-applied.txt</patchTrackingFile>
             </configuration>
             <phase>process-sources</phase>
             <goals>
               <goal>apply</goal>
             </goals>
           </execution>
-
-
-
-          <!--<execution>-->
-            <!--<id>patch</id>-->
-            <!--<phase>process-sources</phase>-->
-            <!--<goals>-->
-              <!--<goal>apply</goal>-->
-            <!--</goals>-->
-          <!--</execution>-->
         </executions>
       </plugin>
 
