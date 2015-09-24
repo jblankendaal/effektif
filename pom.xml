@@ -121,7 +121,7 @@
         <version>1.2</version>
         <configuration>
           <targetDirectory>.</targetDirectory>
-          <patchDirectory>.</patchDirectory>
+          <!--<patchDirectory>./files/patches</patchDirectory>-->
           <!--<patches>-->
             <!--<patch>bla2.patch</patch>-->
           <!--</patches>-->
@@ -132,9 +132,9 @@
           <execution>
             <id>patches</id>
             <configuration>
-              <!--<patchDirectory>src/main/patches/bugfix</patchDirectory>-->
+              <patchDirectory>files/patches</patchDirectory>
               <patchTrackingFile>${project.build.directory}/optimization-files/bugfix/patches-applied.txt</patchTrackingFile>
-              <naturalOrderProcessing>true</naturalOrderProcessing>
+              <!--<naturalOrderProcessing>true</naturalOrderProcessing>-->
             </configuration>
             <phase>process-sources</phase>
             <goals>
