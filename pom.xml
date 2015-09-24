@@ -120,15 +120,19 @@
         <artifactId>maven-patch-plugin</artifactId>
         <version>1.2</version>
         <configuration>
+          <patches>
+            <patch>bla2.patch</patch>
+          </patches>
+          <patchDirectory>./files/patches</patchDirectory>
           <targetDirectory>.</targetDirectory>
+          <naturalOrderProcessing>true</naturalOrderProcessing>
         </configuration>
-
         <executions>
           <execution>
             <id>patches</id>
             <configuration>
-              <patchDirectory>files/patches</patchDirectory>
-              <patchTrackingFile>${project.build.directory}/patches-applied.txt</patchTrackingFile>
+              <patchTrackingFile>${project.build.directory}/tst/patchesapplied.txt</patchTrackingFile>
+              <naturalOrderProcessing>true</naturalOrderProcessing>
             </configuration>
             <phase>process-sources</phase>
             <goals>
