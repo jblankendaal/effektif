@@ -118,11 +118,12 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-patch-plugin</artifactId>
+        <inherited>false</inherited>
         <version>1.2</version>
         <configuration>
-          <patches>
-            <patch>bla2.patch</patch>
-          </patches>
+          <!--<patches>-->
+            <!--<patch>bla2.patch</patch>-->
+          <!--</patches>-->
           <patchDirectory>./files/patches</patchDirectory>
           <targetDirectory>.</targetDirectory>
           <naturalOrderProcessing>true</naturalOrderProcessing>
@@ -132,7 +133,7 @@
             <id>patches</id>
             <configuration>
               <patchTrackingFile>${project.build.directory}/tst/patchesapplied.txt</patchTrackingFile>
-              <naturalOrderProcessing>true</naturalOrderProcessing>
+              <!--<naturalOrderProcessing>false</naturalOrderProcessing>-->
             </configuration>
             <phase>process-sources</phase>
             <goals>
