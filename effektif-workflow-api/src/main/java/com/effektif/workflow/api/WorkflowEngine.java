@@ -19,6 +19,7 @@ import com.effektif.workflow.api.model.*;
 import com.effektif.workflow.api.query.WorkflowInstanceQuery;
 import com.effektif.workflow.api.query.WorkflowQuery;
 import com.effektif.workflow.api.workflow.ExecutableWorkflow;
+import com.effektif.workflow.api.workflow.WorkflowInstanceMigrator;
 import com.effektif.workflow.api.workflowinstance.WorkflowInstance;
 
 import java.util.List;
@@ -36,6 +37,7 @@ public interface WorkflowEngine {
 
   /** Validates and deploys if there are no errors. */
   Deployment deployWorkflow(ExecutableWorkflow workflow);
+  Deployment deployWorkflow(ExecutableWorkflow workflow, WorkflowInstanceMigrator migrator);
   
   List<ExecutableWorkflow> findWorkflows(WorkflowQuery workflowQuery);
 

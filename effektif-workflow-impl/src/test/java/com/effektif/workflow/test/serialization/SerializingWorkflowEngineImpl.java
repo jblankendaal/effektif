@@ -30,6 +30,7 @@ import com.effektif.workflow.api.model.WorkflowInstanceId;
 import com.effektif.workflow.api.query.WorkflowInstanceQuery;
 import com.effektif.workflow.api.query.WorkflowQuery;
 import com.effektif.workflow.api.workflow.ExecutableWorkflow;
+import com.effektif.workflow.api.workflow.WorkflowInstanceMigrator;
 import com.effektif.workflow.api.workflowinstance.WorkflowInstance;
 import com.effektif.workflow.impl.WorkflowEngineImpl;
 import com.effektif.workflow.impl.json.JsonStreamMapper;
@@ -63,6 +64,15 @@ public class SerializingWorkflowEngineImpl implements WorkflowEngine {
     log.debug("deployWorkflow");
     workflow = wireize(" >>workflow>> ", workflow);
     Deployment deployment = workflowEngine.deployWorkflow(workflow);
+    return wireize("  <<deployment<< ", deployment);
+  }
+
+  @Override
+  public Deployment deployWorkflow(ExecutableWorkflow workflow, WorkflowInstanceMigrator migrator) {
+    log.debug("deployWorkflow");
+    workflow = wireize(" >>workflow>> ", workflow);
+    migrator = wireize(" >>migrator>> ", migrator);
+    Deployment deployment = workflowEngine.deployWorkflow(workflow, migrator);
     return wireize("  <<deployment<< ", deployment);
   }
 
