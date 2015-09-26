@@ -1,0 +1,34 @@
+From 7c2c15781491749dabd3f34f6ad9e3787b7eab7c Mon Sep 17 00:00:00 2001
+From: Jeroen Blankendaal <Jeroen@pc-jeroen.local>
+Date: Sat, 26 Sep 2015 21:50:15 +0200
+Subject: [PATCH] Slight change to where the openActivityIds are removed from
+ the List
+
+---
+ .../effektif/workflow/impl/workflowinstance/ActivityInstanceImpl.java  | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git effektif-workflow-impl/src/main/java/com/effektif/workflow/impl/workflowinstance/ActivityInstanceImpl.java effektif-workflow-impl/src/main/java/com/effektif/workflow/impl/workflowinstance/ActivityInstanceImpl.java
+index 3a9fea8..b1de9b1 100644
+--- effektif-workflow-impl/src/main/java/com/effektif/workflow/impl/workflowinstance/ActivityInstanceImpl.java
++++ effektif-workflow-impl/src/main/java/com/effektif/workflow/impl/workflowinstance/ActivityInstanceImpl.java
+@@ -201,6 +201,7 @@ public class ActivityInstanceImpl extends ScopeInstanceImpl {
+       end();
+       propagateToParent();
+     }
++    workflowInstance.removeOpenActivityId(activity.getId());
+     workflow.workflowEngine.notifyTransitionTaken(this, transition, toActivityInstance);
+   }
+   
+@@ -248,7 +249,7 @@ public class ActivityInstanceImpl extends ScopeInstanceImpl {
+     if (start!=null && end!=null) {
+       this.duration = end.toDate().getTime()-start.toDate().getTime();
+     }
+-    workflowInstance.removeOpenActivityId(activity.getId());
++//    workflowInstance.removeOpenActivityId(activity.getId());
+     if (updates!=null) {
+       updates.isEndChanged = true;
+       if (parent!=null) {
+-- 
+2.3.2 (Apple Git-55)
+
