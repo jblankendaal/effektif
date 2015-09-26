@@ -1,8 +1,8 @@
 From 7c2c15781491749dabd3f34f6ad9e3787b7eab7c Mon Sep 17 00:00:00 2001
 From: Jeroen Blankendaal <Jeroen@pc-jeroen.local>
 Date: Sat, 26 Sep 2015 21:50:15 +0200
-Subject: [PATCH] Slight change to where the openActivityIds are removed from
- the List
+Subject: [PATCH 1/2] Slight change to where the openActivityIds are removed
+ from the List
 
 ---
  .../effektif/workflow/impl/workflowinstance/ActivityInstanceImpl.java  | 3 ++-
@@ -29,6 +29,34 @@ index 3a9fea8..b1de9b1 100644
      if (updates!=null) {
        updates.isEndChanged = true;
        if (parent!=null) {
+-- 
+2.3.2 (Apple Git-55)
+
+
+From d0a902418cc78fbdcd4d2fec106af628212890ce Mon Sep 17 00:00:00 2001
+From: Jeroen Blankendaal <Jeroen@pc-jeroen.local>
+Date: Sat, 26 Sep 2015 22:46:48 +0200
+Subject: [PATCH 2/2] Do not read openActivityIds from storage
+
+---
+ .../src/main/java/com/effektif/mongo/MongoWorkflowInstanceStore.java  | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git effektif-mongo/src/main/java/com/effektif/mongo/MongoWorkflowInstanceStore.java effektif-mongo/src/main/java/com/effektif/mongo/MongoWorkflowInstanceStore.java
+index 82f3b6b..846116a 100644
+--- effektif-mongo/src/main/java/com/effektif/mongo/MongoWorkflowInstanceStore.java
++++ effektif-mongo/src/main/java/com/effektif/mongo/MongoWorkflowInstanceStore.java
+@@ -460,8 +460,8 @@ public class MongoWorkflowInstanceStore implements WorkflowInstanceStore, Brewab
+     workflowInstance.lock = readLock((BasicDBObject) dbWorkflowInstance.get(WorkflowInstanceFields.LOCK));
+     workflowInstance.jobs = readJobs(readList(dbWorkflowInstance, WorkflowInstanceFields.JOBS));
+     
+-    Object openActivityIds = readObject(dbWorkflowInstance, WorkflowInstanceFields.OPEN_ACTIVITY_IDS);
+-    workflowInstance.openActivityIds = openActivityIds!=null ? new ArrayList<>((List<String>)openActivityIds) : null;
++//    Object openActivityIds = readObject(dbWorkflowInstance, WorkflowInstanceFields.OPEN_ACTIVITY_IDS);
++    workflowInstance.openActivityIds = new ArrayList<>(); //openActivityIds!=null ? new ArrayList<>((List<String>)openActivityIds) : null;
+     
+     Map<ActivityInstanceImpl, String> allActivityIds = new HashMap<>();
+ 
 -- 
 2.3.2 (Apple Git-55)
 
