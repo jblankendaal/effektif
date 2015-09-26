@@ -460,8 +460,8 @@ public class MongoWorkflowInstanceStore implements WorkflowInstanceStore, Brewab
     workflowInstance.lock = readLock((BasicDBObject) dbWorkflowInstance.get(WorkflowInstanceFields.LOCK));
     workflowInstance.jobs = readJobs(readList(dbWorkflowInstance, WorkflowInstanceFields.JOBS));
     
-    Object openActivityIds = readObject(dbWorkflowInstance, WorkflowInstanceFields.OPEN_ACTIVITY_IDS);
-    workflowInstance.openActivityIds = openActivityIds!=null ? new ArrayList<>((List<String>)openActivityIds) : null;
+//    Object openActivityIds = readObject(dbWorkflowInstance, WorkflowInstanceFields.OPEN_ACTIVITY_IDS);
+    workflowInstance.openActivityIds = new ArrayList<>(); //openActivityIds!=null ? new ArrayList<>((List<String>)openActivityIds) : null;
     
     Map<ActivityInstanceImpl, String> allActivityIds = new HashMap<>();
 
