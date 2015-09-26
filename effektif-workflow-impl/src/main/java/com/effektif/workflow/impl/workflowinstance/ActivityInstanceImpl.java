@@ -201,6 +201,7 @@ public class ActivityInstanceImpl extends ScopeInstanceImpl {
       end();
       propagateToParent();
     }
+    workflowInstance.removeOpenActivityId(activity.getId());
     workflow.workflowEngine.notifyTransitionTaken(this, transition, toActivityInstance);
   }
   
@@ -248,7 +249,7 @@ public class ActivityInstanceImpl extends ScopeInstanceImpl {
     if (start!=null && end!=null) {
       this.duration = end.toDate().getTime()-start.toDate().getTime();
     }
-    workflowInstance.removeOpenActivityId(activity.getId());
+//    workflowInstance.removeOpenActivityId(activity.getId());
     if (updates!=null) {
       updates.isEndChanged = true;
       if (parent!=null) {
