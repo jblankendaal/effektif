@@ -241,7 +241,12 @@ public class WorkflowEngineImpl implements WorkflowEngine, Brewable {
       ActivityImpl activityImpl = workflowInstanceImpl.workflow.findActivityByIdLocal(newActivityId);
       if (activityImpl == null) throw new RuntimeException("To-activityId not found!");
 
-      if (activityInstanceImpl != null && !activityInstanceImpl.isEnded()) activityInstanceImpl.end();
+      if (activityInstanceImpl != null) {
+        if (!activityInstanceImpl.isEnded()) activityInstanceImpl.end();
+
+        workflowInstanceImpl.openActivityIds.remove(activityInstanceImpl.activity.getId());
+      }
+
       if (workflowInstanceImpl.isEnded()) {
         workflowInstanceImpl.setEnd(null);
         workflowInstanceImpl.duration = 0L;
