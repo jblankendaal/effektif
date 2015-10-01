@@ -1,0 +1,49 @@
+From 46728c6d870a98daea14fe6f7b92b948bb170619 Mon Sep 17 00:00:00 2001
+From: Jeroen Blankendaal <Jeroen@pc-jeroen.local>
+Date: Sat, 26 Sep 2015 23:29:02 +0200
+Subject: [PATCH] Test
+
+---
+ .../src/main/java/com/effektif/mongo/MongoWorkflowInstanceStore.java  | 4 ++--
+ .../effektif/workflow/impl/workflowinstance/ActivityInstanceImpl.java | 3 ++-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git effektif-mongo/src/main/java/com/effektif/mongo/MongoWorkflowInstanceStore.java effektif-mongo/src/main/java/com/effektif/mongo/MongoWorkflowInstanceStore.java
+index 80febf4..e48105f 100644
+--- effektif-mongo/src/main/java/com/effektif/mongo/MongoWorkflowInstanceStore.java
++++ effektif-mongo/src/main/java/com/effektif/mongo/MongoWorkflowInstanceStore.java
+@@ -520,8 +520,8 @@ public class MongoWorkflowInstanceStore implements WorkflowInstanceStore, Brewab
+     workflowInstance.lock = readLock((BasicDBObject) dbWorkflowInstance.get(WorkflowInstanceFields.LOCK));
+     workflowInstance.jobs = readJobs(readList(dbWorkflowInstance, WorkflowInstanceFields.JOBS));
+ 
+-    Object openActivityIds = readObject(dbWorkflowInstance, WorkflowInstanceFields.OPEN_ACTIVITY_IDS);
+-    workflowInstance.openActivityIds = openActivityIds != null ? new ArrayList<>((List<String>) openActivityIds) : null;
++//    Object openActivityIds = readObject(dbWorkflowInstance, WorkflowInstanceFields.OPEN_ACTIVITY_IDS);
++    workflowInstance.openActivityIds = new ArrayList<>(); //openActivityIds != null ? new ArrayList<>((List<String>) openActivityIds) : null;
+ 
+     Map<ActivityInstanceImpl, String> allActivityIds = new HashMap<>();
+ 
+diff --git effektif-workflow-impl/src/main/java/com/effektif/workflow/impl/workflowinstance/ActivityInstanceImpl.java effektif-workflow-impl/src/main/java/com/effektif/workflow/impl/workflowinstance/ActivityInstanceImpl.java
+index 3a9fea8..b1de9b1 100644
+--- effektif-workflow-impl/src/main/java/com/effektif/workflow/impl/workflowinstance/ActivityInstanceImpl.java
++++ effektif-workflow-impl/src/main/java/com/effektif/workflow/impl/workflowinstance/ActivityInstanceImpl.java
+@@ -201,6 +201,7 @@ public class ActivityInstanceImpl extends ScopeInstanceImpl {
+       end();
+       propagateToParent();
+     }
++    workflowInstance.removeOpenActivityId(activity.getId());
+     workflow.workflowEngine.notifyTransitionTaken(this, transition, toActivityInstance);
+   }
+   
+@@ -248,7 +249,7 @@ public class ActivityInstanceImpl extends ScopeInstanceImpl {
+     if (start!=null && end!=null) {
+       this.duration = end.toDate().getTime()-start.toDate().getTime();
+     }
+-    workflowInstance.removeOpenActivityId(activity.getId());
++//    workflowInstance.removeOpenActivityId(activity.getId());
+     if (updates!=null) {
+       updates.isEndChanged = true;
+       if (parent!=null) {
+-- 
+2.3.2 (Apple Git-55)
+
