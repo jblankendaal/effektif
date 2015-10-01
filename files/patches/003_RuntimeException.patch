@@ -1,7 +1,7 @@
 From 68ecb1badc1209129be0b84560e07b410cbb56d4 Mon Sep 17 00:00:00 2001
 From: Jeroen Blankendaal <Jeroen@pc-jeroen.local>
 Date: Wed, 30 Sep 2015 09:09:33 +0200
-Subject: [PATCH] Unlock a workflowInstance when a runtime exception occurs
+Subject: [PATCH 1/2] Unlock a workflowInstance when a runtime exception occurs
 
 ---
  .../workflowinstance/WorkflowInstanceImpl.java     | 160 +++++++++++----------
@@ -186,6 +186,32 @@ index 4e69a4b..20b622b 100644
 +      }
 +    } finally {
 +      workflowInstanceStore.unlockWorkflowInstance(this.getId());
+     }
+   }
+ 
+-- 
+2.3.2 (Apple Git-55)
+
+
+From eb96bb4a089015ed950e94348fe4637e92df12fc Mon Sep 17 00:00:00 2001
+From: Jeroen Blankendaal <Jeroen@pc-jeroen.local>
+Date: Thu, 1 Oct 2015 08:22:33 +0200
+Subject: [PATCH 2/2] Unlock a workflowInstance when a runtime exception occurs
+
+---
+ .../effektif/workflow/impl/workflowinstance/WorkflowInstanceImpl.java   | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git effektif-workflow-impl/src/main/java/com/effektif/workflow/impl/workflowinstance/WorkflowInstanceImpl.java effektif-workflow-impl/src/main/java/com/effektif/workflow/impl/workflowinstance/WorkflowInstanceImpl.java
+index 20b622b..84320c4 100644
+--- effektif-workflow-impl/src/main/java/com/effektif/workflow/impl/workflowinstance/WorkflowInstanceImpl.java
++++ effektif-workflow-impl/src/main/java/com/effektif/workflow/impl/workflowinstance/WorkflowInstanceImpl.java
+@@ -219,7 +219,7 @@ public class WorkflowInstanceImpl extends ScopeInstanceImpl {
+         workflowInstanceStore.flushAndUnlock(this);
+       }
+     } finally {
+-      workflowInstanceStore.unlockWorkflowInstance(this.getId());
++      if (workflowInstance.lock != null) workflowInstanceStore.unlockWorkflowInstance(this.getId());
      }
    }
  
