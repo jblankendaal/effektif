@@ -184,7 +184,7 @@ Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
 +        workflowInstanceStore.flushAndUnlock(this);
 +      }
 +    } catch (RuntimeException ex) {
-+      if (workflowInstance.lock != null) workflowInstanceStore.unlockWorkflowInstance(this.getId());
++      if (lock != null) workflowInstanceStore.unlockWorkflowInstance(this.getId());
 +      throw ex;
      }
    }
