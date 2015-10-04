@@ -219,7 +219,7 @@ public class WorkflowInstanceImpl extends ScopeInstanceImpl {
         workflowInstanceStore.flushAndUnlock(this);
       }
     } catch (RuntimeException ex) {
-      if (workflowInstance.lock != null) workflowInstanceStore.unlockWorkflowInstance(this.getId());
+      if (lock != null) workflowInstanceStore.unlockWorkflowInstance(this.getId());
       throw ex;
     }
   }
