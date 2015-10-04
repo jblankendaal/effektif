@@ -127,95 +127,100 @@ public class WorkflowInstanceImpl extends ScopeInstanceImpl {
   public void executeWork() {
     WorkflowInstanceStore workflowInstanceStore = configuration.get(WorkflowInstanceStore.class);
     boolean isFirst = true;
-    while (hasWork()) {
-      ActivityInstanceImpl activityInstance = getNextWork();
-      ActivityImpl activity = activityInstance.getActivity();
-      ActivityType activityType = activity.activityType;
+    try {
+      while (hasWork()) {
+        ActivityInstanceImpl activityInstance = getNextWork();
+        ActivityImpl activity = activityInstance.getActivity();
+        ActivityType activityType = activity.activityType;
 
-      // in the first iteration, the updates will be empty and hence no updates
-      // will be flushed
-      if (isFirst || activityType.isFlushSkippable()) {
-        isFirst = false;
-      } else {
-        workflowInstanceStore.flush(this);
-      }
-
-      if (STATE_STARTING.equals(activityInstance.workState)) {
-        if (log.isDebugEnabled())
-          log.debug("Starting " + activityInstance);
-        activityInstance.execute();
-
-      } else if (STATE_STARTING_MULTI_INSTANCE.equals(activityInstance.workState)) {
-        if (log.isDebugEnabled())
-          log.debug("Starting multi instance " + activityInstance);
-        activityInstance.execute();
-
-      } else if (STATE_STARTING_MULTI_CONTAINER.equals(activityInstance.workState)) {
-        Collection<Object> values = null;
-        MultiInstanceImpl multiInstance = activityType.getMultiInstance();
-        if (multiInstance != null && multiInstance.valuesBindings != null) {
-          Object value = activityInstance.getValues(multiInstance.valuesBindings);
-          if (value != null) {
-            if (value instanceof Collection) {
-              values = (Collection<Object>) value;
-            } else {
-              values = Lists.of(value);
-            }
-          }
-        }
-        if (values != null) {
-          if (log.isDebugEnabled()) {
-            log.debug("Starting multi instance container " + activityInstance);
-          }
-          for (Object element : values) {
-            ActivityInstanceImpl elementActivityInstance = activityInstance.createActivityInstance(activity);
-            elementActivityInstance.setWorkState(STATE_STARTING_MULTI_INSTANCE);
-            elementActivityInstance.initializeForEachElement(multiInstance.elementVariable, element);
-          }
+        // in the first iteration, the updates will be empty and hence no updates
+        // will be flushed
+        if (isFirst || activityType.isFlushSkippable()) {
+          isFirst = false;
         } else {
-          if (log.isDebugEnabled()) {
-            log.debug("Skipping empty multi instance container " + activityInstance);
-          }
-          activityInstance.onwards();
+          workflowInstanceStore.flush(this);
         }
 
-      } else if (STATE_PROPAGATE_TO_PARENT.equals(activityInstance.workState)) {
-        if (log.isDebugEnabled()) {
-          log.debug("Propagating end of " + activityInstance + " to parent " + activityInstance.parent);
-        }
-        activityInstance.parent.activityInstanceEnded(activityInstance);
-        activityInstance.workState = null;
-      } else if (activityInstance.workState == null) {
-        if (log.isDebugEnabled()) {
-          log.debug("Activity instance " + activityInstance + " is completely done");
+        if (STATE_STARTING.equals(activityInstance.workState)) {
+          if (log.isDebugEnabled())
+            log.debug("Starting " + activityInstance);
+          activityInstance.execute();
+
+        } else if (STATE_STARTING_MULTI_INSTANCE.equals(activityInstance.workState)) {
+          if (log.isDebugEnabled())
+            log.debug("Starting multi instance " + activityInstance);
+          activityInstance.execute();
+
+        } else if (STATE_STARTING_MULTI_CONTAINER.equals(activityInstance.workState)) {
+          Collection<Object> values = null;
+          MultiInstanceImpl multiInstance = activityType.getMultiInstance();
+          if (multiInstance != null && multiInstance.valuesBindings != null) {
+            Object value = activityInstance.getValues(multiInstance.valuesBindings);
+            if (value != null) {
+              if (value instanceof Collection) {
+                values = (Collection<Object>) value;
+              } else {
+                values = Lists.of(value);
+              }
+            }
+          }
+          if (values != null) {
+            if (log.isDebugEnabled()) {
+              log.debug("Starting multi instance container " + activityInstance);
+            }
+            for (Object element : values) {
+              ActivityInstanceImpl elementActivityInstance = activityInstance.createActivityInstance(activity);
+              elementActivityInstance.setWorkState(STATE_STARTING_MULTI_INSTANCE);
+              elementActivityInstance.initializeForEachElement(multiInstance.elementVariable, element);
+            }
+          } else {
+            if (log.isDebugEnabled()) {
+              log.debug("Skipping empty multi instance container " + activityInstance);
+            }
+            activityInstance.onwards();
+          }
+
+        } else if (STATE_PROPAGATE_TO_PARENT.equals(activityInstance.workState)) {
+          if (log.isDebugEnabled()) {
+            log.debug("Propagating end of " + activityInstance + " to parent " + activityInstance.parent);
+          }
+          activityInstance.parent.activityInstanceEnded(activityInstance);
+          activityInstance.workState = null;
+        } else if (activityInstance.workState == null) {
+          if (log.isDebugEnabled()) {
+            log.debug("Activity instance " + activityInstance + " is completely done");
+          }
         }
       }
-    }
-    if (hasAsyncWork()) {
-      if (log.isDebugEnabled())
-        log.debug("Going asynchronous " + this);
-      workflowInstanceStore.flush(this);
-      Runnable asyncContinuation = new Runnable() {
+      if (hasAsyncWork()) {
+        if (log.isDebugEnabled())
+          log.debug("Going asynchronous " + this);
+        workflowInstanceStore.flush(this);
+        Runnable asyncContinuation = new Runnable() {
 
-        public void run() {
-          try {
-            work = workAsync;
-            workAsync = null;
-            isAsync = true;
-            if (updates != null) {
-              getUpdates().isWorkChanged = true;
-              getUpdates().isAsyncWorkChanged = true;
+          public void run() {
+            try {
+              work = workAsync;
+              workAsync = null;
+              isAsync = true;
+              if (updates != null) {
+                getUpdates().isWorkChanged = true;
+                getUpdates().isAsyncWorkChanged = true;
+              }
+              executeWork();
+            } catch (Throwable e) {
+              e.printStackTrace();
             }
-            executeWork();
-          } catch (Throwable e) {
-            e.printStackTrace();
           }
-        }
-      };
-      WorkflowEngineImpl workflowEngine = configuration.get(WorkflowEngineImpl.class);
-      workflowEngine.continueAsync(asyncContinuation);
-    } else {
-      workflowInstanceStore.flushAndUnlock(this);
+        };
+        WorkflowEngineImpl workflowEngine = configuration.get(WorkflowEngineImpl.class);
+        workflowEngine.continueAsync(asyncContinuation);
+      } else {
+        workflowInstanceStore.flushAndUnlock(this);
+      }
+    } catch (RuntimeException ex) {
+      if (workflowInstance.lock != null) workflowInstanceStore.unlockWorkflowInstance(this.getId());
+      throw ex;
     }
   }
 
