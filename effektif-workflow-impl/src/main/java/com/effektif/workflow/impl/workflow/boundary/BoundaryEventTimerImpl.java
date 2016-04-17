@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
  */
 @TypeName("boundaryEventTimer")
 public class BoundaryEventTimerImpl implements TimerType, JobType {
-  ;
+
   private static final Logger log = LoggerFactory.getLogger(BoundaryEventTimerImpl.class);
 
   @Override

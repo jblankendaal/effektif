@@ -151,7 +151,7 @@ public class AdapterActivityImpl extends AbstractBindableActivityImpl<AdapterAct
 //        DataTypeImpl dataType = outputParameterDataTypes.get(outputParameterKey);
         if(typedValue != null)
           activityInstance.setVariableValue(variableId, typedValue.getValue());
-        else log.warn("Variable type not defined for variable " + variableId);
+        else log.debug("Variable type not defined for variable " + variableId);
       }
     }
 

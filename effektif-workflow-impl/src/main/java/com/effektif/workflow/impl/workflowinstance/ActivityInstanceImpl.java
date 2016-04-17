@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.effektif.workflow.impl.job.Job;
 import org.joda.time.LocalDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -143,6 +144,8 @@ public class ActivityInstanceImpl extends ScopeInstanceImpl {
   }
 
   public void end() {
+    removeJob();
+
     if (end==null) {
       if (hasOpenActivityInstances()) {
         throw new RuntimeException("Can't end this activity instance. There are open activity instances: " +this);
@@ -151,6 +154,19 @@ public class ActivityInstanceImpl extends ScopeInstanceImpl {
       workflow.workflowEngine.notifyActivityInstanceEnded(this);
       cancelTimersForScope(); // TODO: This is not neccesary for boundary events. Is it neccesary at all?
       setWorkState(null);
+    }
+  }
+
+  public void removeJob() {
+    if (workflowInstance != null && workflowInstance.jobs != null) {
+      Job[] jobsArray = workflowInstance.jobs.toArray(new Job[workflowInstance.jobs.size()]);
+
+      for (Job job : jobsArray) {
+        if (this.getId().equals(job.activityInstanceId)) {
+          log.debug("Removing job: " + job);
+          workflowInstance.removeJob(job);
+        }
+      }
     }
   }
 

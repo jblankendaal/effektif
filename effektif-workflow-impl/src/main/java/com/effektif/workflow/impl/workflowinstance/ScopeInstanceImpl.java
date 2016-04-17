@@ -17,13 +17,7 @@ package com.effektif.workflow.impl.workflowinstance;
 
 import static com.effektif.workflow.impl.workflowinstance.ActivityInstanceImpl.*;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.joda.time.LocalDateTime;
 import org.slf4j.Logger;
@@ -576,6 +570,23 @@ public abstract class ScopeInstanceImpl extends BaseInstanceImpl {
   }
 
   public void onwards() {
+
+//    log.debug("Onwards called of scopeInstance, removing jobs");
+//    // TODO: JB check this
+//    if (workflowInstance != null && workflowInstance.jobs != null) {
+//      Job[] jobsArray = new Job[workflowInstance.jobs.size()];
+//      for (int i = 0; i < workflowInstance.jobs.size(); i++) {
+//        jobsArray[i] = workflowInstance.jobs.get(i);
+//      }
+//
+//      for (Job job : jobsArray) {
+//        workflowInstance.removeJob(job);
+//        log.debug("Removing job: " + job);
+//      }
+//    }
+//
+//    // until here
+
     endAndPropagateToParent();
   }
 
