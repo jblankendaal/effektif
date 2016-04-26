@@ -250,7 +250,7 @@ public class WorkflowEngineImpl implements WorkflowEngine, Brewable {
           Job job = jobIterator.next();
           if (job.getActivityInstanceId() != null && activityInstanceImpl != null
               && job.getActivityInstanceId().equals(activityInstanceImpl.getId())) {
-            jobIterator.remove();
+            workflowInstanceImpl.removeJob(job);
           }
         }
       }
@@ -267,10 +267,11 @@ public class WorkflowEngineImpl implements WorkflowEngine, Brewable {
       workflowInstanceImpl.execute(activityImpl);
       workflowInstanceImpl.executeWork();
 
-      return workflowInstanceImpl.toWorkflowInstance();
     } finally {
       workflowInstanceStore.unlockWorkflowInstance(workflowInstanceImpl);
     }
+
+    return workflowInstanceImpl.toWorkflowInstance();
   }
 
   @Override
