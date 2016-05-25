@@ -27,7 +27,7 @@ public class MongoClientSupplier implements Supplier {
     MongoConfiguration mongoConfiguration = brewery.get(MongoConfiguration.class);
     return new MongoClient(
             mongoConfiguration.getServerAddresses(), 
-            mongoConfiguration.getCredentials(), 
+//            mongoConfiguration.getCredentials(),
             mongoConfiguration.getOptionBuilder().build());
   }
 

@@ -15,6 +15,8 @@
  */
 package com.effektif.workflow.impl.workflow;
 
+import com.effektif.workflow.impl.util.Time;
+import org.joda.time.Interval;
 import org.joda.time.LocalDateTime;
 
 import com.effektif.workflow.api.Configuration;
@@ -24,6 +26,8 @@ import com.effektif.workflow.impl.job.Job;
 import com.effektif.workflow.impl.job.TimerType;
 import com.effektif.workflow.impl.job.TimerTypeService;
 import com.effektif.workflow.impl.workflowinstance.ScopeInstanceImpl;
+import org.joda.time.ReadableDuration;
+import org.joda.time.format.ISOPeriodFormat;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -87,17 +91,15 @@ public class TimerImpl {
 
     try {
       if (repeatExpression != null) {
-        Duration f = DatatypeFactory.newInstance().newDuration(repeatExpression);
-        Date date = new Date();
-        f.addTo(date);
 
-        return new LocalDateTime(date.getTime());
+        int seconds = (int)java.time.Duration.parse(repeatExpression).getSeconds();
+
+        return Time.now().plusSeconds(seconds);
       }
-    } catch (DatatypeConfigurationException ex) {
+    } catch (Exception ex) {
       throw new RuntimeException(ex);
     }
 
     return null;
-
   }
 }

@@ -93,7 +93,7 @@ public class MongoConfiguration extends DefaultConfiguration {
         return new ServerAddress(host, port);
       }
       return new ServerAddress(host);
-    } catch (UnknownHostException e) {
+    } catch (Exception e) {
       throw new RuntimeException(e);
     }
   }

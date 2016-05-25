@@ -181,18 +181,6 @@ public class LoggingCursor extends DBCursor {
     return cursor.getOptions();
   }
 
-  @SuppressWarnings("deprecation")
-  @Override
-  public int numGetMores() {
-    return cursor.numGetMores();
-  }
-
-  @SuppressWarnings("deprecation")
-  @Override
-  public List<Integer> getSizes() {
-    return cursor.getSizes();
-  }
-
   @Override
   public int numSeen() {
     return cursor.numSeen();
