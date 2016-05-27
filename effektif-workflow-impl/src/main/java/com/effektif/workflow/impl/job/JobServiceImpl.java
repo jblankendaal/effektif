@@ -17,8 +17,6 @@ package com.effektif.workflow.impl.job;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -92,12 +90,12 @@ public class JobServiceImpl implements JobService, Brewable, Startable {
         }
       }, 100, checkInterval);
 
-      keepDoing(new Runnable() {
-        @Override
-        public void run() {
-          checkJobs();
-        }
-      }, 500, checkInterval);
+//      keepDoing(new Runnable() {
+//        @Override
+//        public void run() {
+//          checkJobs();
+//        }
+//      }, 500, checkInterval);
 
       isRunning = true;
     }
@@ -120,6 +118,8 @@ public class JobServiceImpl implements JobService, Brewable, Startable {
 
   public void shutdown() {
     timer.cancel();
+    timer.purge();
+    executor.shutdown();
     isRunning = false;
   }
 

@@ -16,11 +16,9 @@
 package com.effektif.workflow.impl;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.effektif.workflow.impl.job.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -243,17 +241,18 @@ public class WorkflowEngineImpl implements WorkflowEngine, Brewable {
         throw new RuntimeException("Move cannot be called on a workflowInstance with more than one open activityInstance. " +
                 "Probably this workflowInstance is part of a paralell process...");
 
-      if (workflowInstanceImpl.jobs != null) {
-        Iterator<Job> jobIterator = workflowInstanceImpl.jobs.iterator();
-
-        while (jobIterator.hasNext()) {
-          Job job = jobIterator.next();
-          if (job.getActivityInstanceId() != null && activityInstanceImpl != null
-              && job.getActivityInstanceId().equals(activityInstanceImpl.getId())) {
-            workflowInstanceImpl.removeJob(job);
-          }
-        }
-      }
+      activityInstanceImpl.removeJob();
+//      if (workflowInstanceImpl.jobs != null) {
+//        Iterator<Job> jobIterator = workflowInstanceImpl.jobs.iterator();
+//
+//        while (jobIterator.hasNext()) {
+//          Job job = jobIterator.next();
+//          if (job.getActivityInstanceId() != null && activityInstanceImpl != null
+//              && job.getActivityInstanceId().equals(activityInstanceImpl.getId())) {
+//            workflowInstanceImpl.removeJob(job);
+//          }
+//        }
+//      }
 
       ActivityImpl activityImpl = workflowInstanceImpl.workflow.findActivityByIdLocal(newActivityId);
       if (activityImpl == null) throw new RuntimeException("To-activityId not found!");
