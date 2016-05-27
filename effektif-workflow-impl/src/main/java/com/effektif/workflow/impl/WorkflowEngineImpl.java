@@ -241,7 +241,7 @@ public class WorkflowEngineImpl implements WorkflowEngine, Brewable {
         throw new RuntimeException("Move cannot be called on a workflowInstance with more than one open activityInstance. " +
                 "Probably this workflowInstance is part of a paralell process...");
 
-      activityInstanceImpl.removeJob();
+      if (activityInstanceImpl != null) activityInstanceImpl.removeJob();
 //      if (workflowInstanceImpl.jobs != null) {
 //        Iterator<Job> jobIterator = workflowInstanceImpl.jobs.iterator();
 //
