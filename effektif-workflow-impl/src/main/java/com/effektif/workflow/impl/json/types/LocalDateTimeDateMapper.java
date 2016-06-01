@@ -16,6 +16,7 @@ package com.effektif.workflow.impl.json.types;
 import java.lang.reflect.Type;
 import java.util.Date;
 
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDateTime;
 
 import com.effektif.workflow.impl.data.InvalidValueException;
@@ -53,6 +54,6 @@ public class LocalDateTimeDateMapper extends AbstractTypeMapper<LocalDateTime> i
     if (!Date.class.isAssignableFrom(jsonValue.getClass())) {
       throw new InvalidValueException(String.format("Invalid date ‘%s’ (%s)", jsonValue, jsonValue.getClass().getName()));
     }
-    return new LocalDateTime((Date)jsonValue);
+    return new LocalDateTime((Date)jsonValue, DateTimeZone.getDefault());
   }
 }

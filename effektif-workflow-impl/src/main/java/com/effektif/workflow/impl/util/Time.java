@@ -34,7 +34,8 @@ public class Time {
     if (now!=null) {
       return now;
     }
-    return new LocalDateTime(DateTimeZone.UTC);
+    return new LocalDateTime(DateTimeZone.getDefault());
+//    return new LocalDateTime(DateTimeZone.UTC);
   }
   
   public static LocalDateTime resolve(RelativeTime relativeTime) {
