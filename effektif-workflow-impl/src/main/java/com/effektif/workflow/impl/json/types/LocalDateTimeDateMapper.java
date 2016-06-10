@@ -54,6 +54,8 @@ public class LocalDateTimeDateMapper extends AbstractTypeMapper<LocalDateTime> i
     if (!Date.class.isAssignableFrom(jsonValue.getClass())) {
       throw new InvalidValueException(String.format("Invalid date ‘%s’ (%s)", jsonValue, jsonValue.getClass().getName()));
     }
-    return new LocalDateTime((Date)jsonValue, DateTimeZone.getDefault());
+//    return new LocalDateTime((Date)jsonValue, DateTimeZone.getDefault());
+//    return new LocalDateTime(jsonValue, DateTimeZone.UTC);
+    return new LocalDateTime((Date)jsonValue);
   }
 }
