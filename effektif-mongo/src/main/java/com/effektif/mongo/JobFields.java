@@ -29,6 +29,7 @@ interface JobFields {
   String WORKFLOW_INSTANCE_ID = "workflowInstanceId";
   String LOCK_WORKFLOW_INSTANCE = "lockWorkflowInstance";
   String ACTIVITY_INSTANCE_ID = "activityInstanceId";
+  String ACTIVITY_ID = "activityId";
   String ERROR = "error";
   String LOGS = "logs";
   String TIME = "time";

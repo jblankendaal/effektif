@@ -52,6 +52,7 @@ public class Job {
   public String organizationId;
   public String sourceWorkflowId;
   public WorkflowId workflowId;
+  public String activityId;
   public WorkflowInstanceId workflowInstanceId;
   public String activityInstanceId;
 
@@ -117,7 +118,12 @@ public class Job {
     this.workflowId = workflowId;
     return this;
   }
-  
+
+  public Job activityId(String activityId) {
+    this.activityId = activityId;
+    return this;
+  }
+
   public Job workflowInstanceId(WorkflowInstanceId workflowInstanceId) {
     this.workflowInstanceId = workflowInstanceId;
     return this;
@@ -159,6 +165,9 @@ public class Job {
     return id;
   }
 
+  public void setId(String id) {
+    this.id = id;
+  }
   
   public String getKey() {
     return key;
@@ -209,7 +218,10 @@ public class Job {
     return workflowId;
   }
 
-  
+  public String getActivityId() {
+    return activityId;
+  }
+
   public WorkflowInstanceId getWorkflowInstanceId() {
     return workflowInstanceId;
   }

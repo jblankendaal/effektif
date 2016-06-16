@@ -44,6 +44,11 @@ public class BoundaryEventTimerImpl implements TimerType, JobType {
   }
 
   @Override
+  public boolean isWorkflowTimer() {
+    return false;
+  }
+
+  @Override
   public int getMaxRetries() {
     return 0;
   }

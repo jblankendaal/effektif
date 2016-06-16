@@ -15,6 +15,7 @@ package com.effektif.mongo;
 
 import com.effektif.workflow.api.workflow.AbstractWorkflow;
 import com.effektif.workflow.api.workflowinstance.WorkflowInstance;
+import com.effektif.workflow.impl.job.Job;
 import com.effektif.workflow.impl.json.MappingsBuilder;
 import com.effektif.workflow.impl.json.types.DateDateMapper;
 import com.effektif.workflow.impl.json.types.LocalDateTimeDateMapper;

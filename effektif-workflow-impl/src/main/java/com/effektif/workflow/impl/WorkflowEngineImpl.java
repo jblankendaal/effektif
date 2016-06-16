@@ -15,38 +15,40 @@
  */
 package com.effektif.workflow.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.effektif.workflow.api.Configuration;
 import com.effektif.workflow.api.WorkflowEngine;
-import com.effektif.workflow.api.model.Deployment;
-import com.effektif.workflow.api.model.Message;
-import com.effektif.workflow.api.model.TriggerInstance;
-import com.effektif.workflow.api.model.TypedValue;
-import com.effektif.workflow.api.model.VariableValues;
-import com.effektif.workflow.api.model.WorkflowId;
-import com.effektif.workflow.api.model.WorkflowInstanceId;
+import com.effektif.workflow.api.activities.StartEvent;
+import com.effektif.workflow.api.model.*;
 import com.effektif.workflow.api.query.WorkflowInstanceQuery;
 import com.effektif.workflow.api.query.WorkflowQuery;
 import com.effektif.workflow.api.workflow.ExecutableWorkflow;
+import com.effektif.workflow.api.workflow.Timer;
+import com.effektif.workflow.api.workflow.starteventtimer.StartEventTimer;
 import com.effektif.workflow.api.workflowinstance.WorkflowInstance;
 import com.effektif.workflow.impl.configuration.Brewable;
 import com.effektif.workflow.impl.configuration.Brewery;
 import com.effektif.workflow.impl.data.DataTypeService;
+import com.effektif.workflow.impl.job.Job;
+import com.effektif.workflow.impl.job.JobServiceImpl;
+import com.effektif.workflow.impl.job.TimerTypeService;
 import com.effektif.workflow.impl.util.Exceptions;
 import com.effektif.workflow.impl.util.Time;
 import com.effektif.workflow.impl.workflow.ActivityImpl;
+import com.effektif.workflow.impl.workflow.TimerImpl;
 import com.effektif.workflow.impl.workflow.TransitionImpl;
 import com.effektif.workflow.impl.workflow.WorkflowImpl;
+import com.effektif.workflow.impl.workflow.starteventtimer.StartEventTimerImpl;
 import com.effektif.workflow.impl.workflowinstance.ActivityInstanceImpl;
 import com.effektif.workflow.impl.workflowinstance.LockImpl;
 import com.effektif.workflow.impl.workflowinstance.ScopeInstanceImpl;
 import com.effektif.workflow.impl.workflowinstance.WorkflowInstanceImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Tom Baeyens
@@ -108,6 +110,54 @@ public class WorkflowEngineImpl implements WorkflowEngine, Brewable {
         workflowImpl.trigger.published(workflowImpl);
       }
       workflowCache.put(workflowImpl);
+
+      // Add job based on StartEventTimer in this workflow.
+//      if (workflowImpl.getTimers() != null) {
+//        for (TimerImpl timer : workflowImpl.getTimers()) {
+//          if (timer.timer instanceof StartEventTimer) {
+//            Job job = timer.createJob(workflowImpl, (StartEventTimer) timer.timer);
+//
+//            if (job != null) {
+//              JobServiceImpl jobService = configuration.get(JobServiceImpl.class);
+//              jobService.saveJob(job);
+//            }
+//          }
+//        }
+//      }
+
+      if (workflowImpl.activities != null) {
+        for (ActivityImpl activity : workflowImpl.activities.values()) {
+          if (activity.activity instanceof StartEvent && activity.getTimers() != null) {
+
+            Iterator<TimerImpl> timers = activity.getTimers().iterator();
+
+            while (timers.hasNext()) {
+              TimerImpl timer = timers.next();
+
+              if (timer.timer instanceof StartEventTimer) {
+                Job job = timer.createJob(activity);
+
+                if (job != null) {
+                  JobServiceImpl jobService = configuration.get(JobServiceImpl.class);
+                  jobService.saveJob(job);
+//                  timers.remove();
+                }
+              }
+            }
+
+//            for (TimerImpl timer : activity.getTimers()) {
+//              if (timer.timer instanceof StartEventTimer) {
+//                Job job = timer.createJob(activity);
+//
+//                if (job != null) {
+//                  JobServiceImpl jobService = configuration.get(JobServiceImpl.class);
+//                  jobService.saveJob(job);
+//                }
+//              }
+//            }
+          }
+        }
+      }
     }
 
     return new Deployment(workflow.getId(), parser.getIssues());
@@ -210,7 +260,7 @@ public class WorkflowEngineImpl implements WorkflowEngine, Brewable {
    * Note: If your process contains a parallel gateway, and you move one of the two "instances" to an activity after the
    * merge-parallel gateway, things would get messy.... Because of that, the move does not allow this, it checks for #open activityInstances <= 1
    * Sub-processes are not taken into account ie, propagateToParent is not called.
-   * @return WorkflowInstance is the to-activity was found and the move was executed, null otherwise.
+   * @return WorkflowInstance if the to-activity was found and the move was executed, null otherwise.
    */
   public WorkflowInstance moveImpl(WorkflowInstanceImpl workflowInstanceImpl, String activityInstanceId, String newActivityId) {
 
@@ -242,17 +292,6 @@ public class WorkflowEngineImpl implements WorkflowEngine, Brewable {
                 "Probably this workflowInstance is part of a paralell process...");
 
       if (activityInstanceImpl != null) activityInstanceImpl.removeJob();
-//      if (workflowInstanceImpl.jobs != null) {
-//        Iterator<Job> jobIterator = workflowInstanceImpl.jobs.iterator();
-//
-//        while (jobIterator.hasNext()) {
-//          Job job = jobIterator.next();
-//          if (job.getActivityInstanceId() != null && activityInstanceImpl != null
-//              && job.getActivityInstanceId().equals(activityInstanceImpl.getId())) {
-//            workflowInstanceImpl.removeJob(job);
-//          }
-//        }
-//      }
 
       ActivityImpl activityImpl = workflowInstanceImpl.workflow.findActivityByIdLocal(newActivityId);
       if (activityImpl == null) throw new RuntimeException("To-activityId not found!");

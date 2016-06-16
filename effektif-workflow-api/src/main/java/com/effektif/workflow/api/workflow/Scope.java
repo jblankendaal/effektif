@@ -176,6 +176,10 @@ public abstract class Scope extends Element {
     if (this.variables==null) {
       this.variables = new ArrayList<>();
     }
+    // Prevent that variables are added twice.
+    for (Variable var : this.variables) {
+      if (var.getId().equals(variable.getId())) return this;
+    }
     this.variables.add(variable);
     return this;
   }

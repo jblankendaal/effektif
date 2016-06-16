@@ -15,24 +15,23 @@
  */
 package com.effektif.workflow.impl.workflow;
 
-import com.effektif.workflow.impl.util.Time;
-import org.joda.time.Interval;
-import org.joda.time.LocalDateTime;
-
+import com.cronutils.model.Cron;
+import com.cronutils.model.CronType;
+import com.cronutils.model.definition.CronDefinitionBuilder;
+import com.cronutils.model.time.ExecutionTime;
+import com.cronutils.parser.CronParser;
 import com.effektif.workflow.api.Configuration;
+import com.effektif.workflow.api.activities.StartEvent;
 import com.effektif.workflow.api.workflow.Timer;
 import com.effektif.workflow.impl.WorkflowParser;
 import com.effektif.workflow.impl.job.Job;
 import com.effektif.workflow.impl.job.TimerType;
 import com.effektif.workflow.impl.job.TimerTypeService;
+import com.effektif.workflow.impl.util.Time;
 import com.effektif.workflow.impl.workflowinstance.ScopeInstanceImpl;
-import org.joda.time.ReadableDuration;
-import org.joda.time.format.ISOPeriodFormat;
-
-import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.Duration;
-import java.util.Date;
+import org.joda.time.DateTime;
+import org.joda.time.LocalDateTime;
+import org.joda.time.format.ISODateTimeFormat;
 
 /**
  * @author Tom Baeyens
@@ -85,21 +84,54 @@ public class TimerImpl {
     return job;
   }
 
+  public Job createJob(ActivityImpl startActivity) {
+
+    if (startActivity.activity instanceof StartEvent) {
+      Job job = new Job();
+      job.workflowId = startActivity.workflow.id;
+      job.activityId = startActivity.id;
+      job.dueDate = calculateDueDate();
+      job.jobType = timerType.getJobType(null, this);
+      return job;
+    } else {
+      throw new RuntimeException("Job can only be created from a StartEvent type activity.");
+    }
+  }
+
   public LocalDateTime calculateDueDate() {
 
-    String repeatExpression = timer.getRepeatExpression();
+//    String[] parts2 = "R4/2016-03-11T14:13/PT5M".split("[/]");
 
-    try {
-      if (repeatExpression != null) {
+    if (timer.getRepeatExpression() != null) {
+      try {
 
-        int seconds = (int)java.time.Duration.parse(repeatExpression).getSeconds();
+        int seconds = (int) java.time.Duration.parse(timer.getRepeatExpression()).getSeconds();
 
         return Time.now().plusSeconds(seconds);
+      } catch (Exception ex) {
+        throw new RuntimeException("Expression: " + timer.getRepeatExpression(), ex);
       }
-    } catch (Exception ex) {
-      throw new RuntimeException(ex);
+    } else if (timer.getDueDateExpression() != null) {
+      try {
+        return ISODateTimeFormat.dateTime().parseDateTime(timer.getDueDateExpression()).toLocalDateTime();
+      } catch (Exception ex) {
+        throw new RuntimeException("Error parsing duedate: " + timer.getDueDateExpression(), ex);
+      }
+    } else if (timer.getTimeCycleExpression() != null) {
+      CronParser cronParser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX));
+      try {
+        Cron cron = cronParser.parse(timer.getTimeCycleExpression());
+        cron.validate();
+        ExecutionTime executionTime = ExecutionTime.forCron(cronParser.parse(timer.getTimeCycleExpression()));
+
+        return executionTime.nextExecution(Time.now().toDateTime()).toLocalDateTime();
+      } catch (IllegalArgumentException ex) {
+        throw new RuntimeException("Error parsing cronexpression: " + timer.getTimeCycleExpression(), ex);
+      }
     }
 
     return null;
   }
+
 }
+

@@ -55,6 +55,7 @@ import com.effektif.workflow.impl.json.types.ValueMapper;
 import com.effektif.workflow.impl.json.types.VariableInstanceMapperFactory;
 import com.effektif.workflow.impl.json.types.VariableMapperFactory;
 import com.effektif.workflow.impl.workflow.boundary.BoundaryEventTimerImpl;
+import com.effektif.workflow.impl.workflow.starteventtimer.StartEventTimerImpl;
 
 /**
  * @author Tom Baeyens
@@ -75,6 +76,7 @@ public class MappingsBuilder {
     baseClass(Trigger.class);
     baseClass(JobType.class);
     subClasses(BoundaryEventTimerImpl.class); //todo: make this dynamic
+    subClasses(StartEventTimerImpl.class); //todo: make this dynamic
     baseClass(Activity.class);
     baseClass(Condition.class);
     baseClass(DataType.class, "name");

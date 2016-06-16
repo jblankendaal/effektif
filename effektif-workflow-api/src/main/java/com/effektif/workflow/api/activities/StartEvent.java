@@ -16,10 +16,17 @@
 package com.effektif.workflow.api.activities;
 
 import com.effektif.workflow.api.bpmn.BpmnElement;
+import com.effektif.workflow.api.bpmn.BpmnReader;
+import com.effektif.workflow.api.bpmn.XmlElement;
 import com.effektif.workflow.api.condition.Condition;
 import com.effektif.workflow.api.json.TypeName;
+import com.effektif.workflow.api.model.WorkflowId;
 import com.effektif.workflow.api.workflow.Activity;
+import com.effektif.workflow.api.workflow.Timer;
 import com.effektif.workflow.api.workflow.Transition;
+import com.effektif.workflow.api.workflow.starteventtimer.StartEventTimer;
+
+import java.util.List;
 
 
 /**
@@ -31,6 +38,24 @@ import com.effektif.workflow.api.workflow.Transition;
 @TypeName("startEvent")
 @BpmnElement("startEvent")
 public class StartEvent extends Activity {
+
+  @Override
+  public void readBpmn(BpmnReader r) {
+
+    List <XmlElement> elements = r.readElementsBpmn("timerEventDefinition");
+    for (XmlElement element : elements) {
+      r.startElement(element);
+
+      Timer timer = new StartEventTimer();
+      timer.readBpmn(r);
+
+      this.timer(timer);
+
+      r.endElement();
+    }
+    super.readBpmn(r);
+
+  }
 
   @Override
   public StartEvent id(String id) {

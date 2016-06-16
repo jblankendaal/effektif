@@ -49,6 +49,13 @@
       <version>1.7R3</version>
     </dependency>
 
+    <dependency>
+      <groupId>com.cronutils</groupId>
+      <artifactId>cron-utils</artifactId>
+      <version>4.1.0</version>
+      <scope>compile</scope>
+    </dependency>
+
     <!-- TEST DEPENDENCIES -->
 
     <dependency>

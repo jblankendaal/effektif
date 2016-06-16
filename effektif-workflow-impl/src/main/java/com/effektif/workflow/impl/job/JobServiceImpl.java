@@ -83,19 +83,19 @@ public class JobServiceImpl implements JobService, Brewable, Startable {
       
       timer = new Timer("Job executor timer");
 
-      keepDoing(new Runnable() {
-        @Override
-        public void run() {
-          checkWorkflowInstanceJobs();
-        }
-      }, 100, checkInterval);
-
 //      keepDoing(new Runnable() {
 //        @Override
 //        public void run() {
-//          checkJobs();
+//          checkWorkflowInstanceJobs();
 //        }
-//      }, 500, checkInterval);
+//      }, 100, checkInterval);
+
+      keepDoing(new Runnable() {
+        @Override
+        public void run() {
+          checkJobs();
+        }
+      }, 500, checkInterval);
 
       isRunning = true;
     }
@@ -218,7 +218,7 @@ public class JobServiceImpl implements JobService, Brewable, Startable {
   
   public void executeJob(JobExecution jobExecution) {
     Job job = jobExecution.job; 
-    log.debug("Executing job "+job.id);
+    log.debug("Executing job "+job.getDueDate().toString() + ", workflowId: " + job.workflowId);
     job.dueDate = null;
     job.lock = null;
     JobType jobType = job.jobType;

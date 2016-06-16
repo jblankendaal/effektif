@@ -455,15 +455,13 @@ public abstract class ScopeInstanceImpl extends BaseInstanceImpl {
   protected void initializeTimers() {
     if (scope.timers!=null) {
       for (TimerImpl timer: scope.timers) {
-        Job job = timer.createJob(this);
-        job.workflowInstanceId(workflowInstance.getId());
-        job.activityInstanceId(getActivityInstanceId());
+        if (!timer.timerType.isWorkflowTimer()) {
+          Job job = timer.createJob(this);
+          job.workflowInstanceId(workflowInstance.getId());
+          job.activityInstanceId(getActivityInstanceId());
 
-        workflowInstance.addJob(job);
-
-//        workflow.configuration
-//          .get(JobStore.class)
-//          .saveJob(job);
+          workflowInstance.addJob(job);
+        }
       }
     }
   }

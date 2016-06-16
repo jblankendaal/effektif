@@ -16,6 +16,7 @@
 package com.effektif.workflow.impl.job;
 
 
+import com.effektif.workflow.api.model.WorkflowId;
 
 /**
  * @author Tom Baeyens
@@ -23,6 +24,7 @@ package com.effektif.workflow.impl.job;
 public class JobQuery {
 
   protected String jobId;
+  protected WorkflowId workflowId;
 
   public String getJobId() {
     return this.jobId;
@@ -34,9 +36,22 @@ public class JobQuery {
     this.jobId = jobId;
     return this;
   }
-  
+
+  public WorkflowId getWorkflowId() {
+    return workflowId;
+  }
+
+  public void setWorkflowId(WorkflowId workflowId) {
+    this.workflowId = workflowId;
+  }
+
+  public JobQuery workflowId(WorkflowId workflowId) {
+    this.workflowId = workflowId;
+    return this;
+  }
+
   public boolean meetsCriteria(Job job) {
-    if (jobId!=null && !jobId.equals(job.id)) {
+    if (jobId!=null && !jobId.equals(job.id) || workflowId != null && !workflowId.equals(job.workflowId)) {
       return false;
     }
     return true;

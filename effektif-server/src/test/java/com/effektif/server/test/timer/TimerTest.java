@@ -28,6 +28,9 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.format.DateTimeFormatterBuilder;
+import java.util.regex.Pattern;
 
 
 /**
@@ -51,7 +54,6 @@ public class TimerTest extends WorkflowTest {
   public void testReadBpmn () {
 
     String fileName = "workflows/Task_boundary.bpmn.xml";
-    MongoConfiguration config;
 
     try {
 
@@ -61,6 +63,45 @@ public class TimerTest extends WorkflowTest {
 
       WorkflowInstance workflowInstance = start(workflow);
       //// TODO: finish
+
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+  }
+
+  @Test
+  public void testTimerBpmn () {
+
+    String fileName = "workflows/StartAndBoundaryEventTimer.bpmn.xml";
+
+    try {
+      ExecutableWorkflow workflow = readFlowFromFile(fileName);
+      workflow.setId(null);
+      deploy(workflow);
+
+      WorkflowInstance workflowInstance = start(workflow);
+//      Thread.sleep(60*1000);
+//      WorkflowInstance workflowInstance = start(workflow);
+
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+  }
+
+  @Test
+  public void testSomeBpmn () {
+
+    String fileName = "workflows/TwoFlows.bpmn.xml";
+
+    try {
+      ExecutableWorkflow workflow = readFlowFromFile(fileName);
+      workflow.setId(null);
+      deploy(workflow);
+
+//      Thread.sleep(60*1000);
+//      WorkflowInstance workflowInstance = start(workflow);
 
     } catch (Exception e) {
       e.printStackTrace();

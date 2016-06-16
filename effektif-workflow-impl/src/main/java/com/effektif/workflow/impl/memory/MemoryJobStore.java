@@ -48,6 +48,11 @@ public class MemoryJobStore implements JobStore {
   }
 
   @Override
+  public Job lockJobById(String jobId) {
+    return jobs.remove(jobId);
+  }
+
+  @Override
   public synchronized void saveJob(Job job) {
     if (job.key!=null) {
       for (Job existingJob: jobs.values()) {
@@ -95,6 +100,17 @@ public class MemoryJobStore implements JobStore {
   @Override
   public List<Job> findAllJobs() {
     return new ArrayList<>(jobs.values());
+  }
+
+  @Override
+  public List<Job> findJobs(JobQuery query) {
+    List<Job> result = new ArrayList<>();
+    for (Job job: jobs.values()) {
+      if (query.meetsCriteria(job)) {
+        result.add(job);
+      }
+    }
+    return result;
   }
 
   @Override

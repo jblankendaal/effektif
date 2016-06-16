@@ -27,4 +27,5 @@ public interface TimerType {
 
   JobType getJobType(ScopeInstanceImpl scopeInstance, TimerImpl timerImpl);
 
+  boolean isWorkflowTimer();
 }

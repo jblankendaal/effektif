@@ -29,6 +29,7 @@ public class Timer {
   protected String id;
   protected String dueDateExpression;
   protected String repeatExpression;
+  protected String timeCycleExpression;
 
   public void readBpmn(BpmnReader r) {
     //            <bpmn:timerEventDefinition>
@@ -40,10 +41,18 @@ public class Timer {
     //timeCycle -- not supported for now
     //timeDuration -- Interval/duration, ISO-8601 format for time interval representations
 
-    this.repeatExpression = r.readTextBpmn("timeDuration");
-    this.dueDateExpression = r.readTextBpmn("timeDate");
+    this.repeatExpression = r.readTextBpmn("timeDuration"); // ie P2DT5H30M
+    this.dueDateExpression = r.readTextBpmn("timeDate");  // ie 2016-04-11T14:13:14
+    this.timeCycleExpression = r.readTextBpmn("timeCycle"); // ie: R4/2016-03-11T14:13/PT5M - 4 times every 5 minutes, starting March 11th 14:13
   }
 
+  public String getTimeCycleExpression() {
+    return timeCycleExpression;
+  }
+
+  public void setTimeCycleExpression(String timeCycleExpression) {
+    this.timeCycleExpression = timeCycleExpression;
+  }
 
   public String getId() {
     return this.id;

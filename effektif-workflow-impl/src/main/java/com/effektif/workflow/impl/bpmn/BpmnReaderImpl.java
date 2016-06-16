@@ -13,46 +13,30 @@
  * limitations under the License. */
 package com.effektif.workflow.impl.bpmn;
 
-import static com.effektif.workflow.impl.bpmn.Bpmn.*;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.Stack;
-
-import com.effektif.workflow.api.workflow.*;
-import com.effektif.workflow.impl.workflow.boundary.BoundaryEventTimer;
-import org.joda.time.LocalDateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.effektif.workflow.api.activities.StartEvent;
 import com.effektif.workflow.api.bpmn.BpmnReader;
 import com.effektif.workflow.api.bpmn.XmlElement;
 import com.effektif.workflow.api.condition.Condition;
 import com.effektif.workflow.api.model.Id;
 import com.effektif.workflow.api.model.RelativeTime;
 import com.effektif.workflow.api.types.DataType;
-import com.effektif.workflow.api.workflow.diagram.Bounds;
-import com.effektif.workflow.api.workflow.diagram.Diagram;
-import com.effektif.workflow.api.workflow.diagram.Edge;
-import com.effektif.workflow.api.workflow.diagram.Node;
-import com.effektif.workflow.api.workflow.diagram.Point;
+import com.effektif.workflow.api.workflow.*;
+import com.effektif.workflow.api.workflow.Timer;
+import com.effektif.workflow.api.workflow.diagram.*;
+import com.effektif.workflow.api.workflow.starteventtimer.StartEventTimer;
 import com.effektif.workflow.impl.exceptions.BadRequestException;
-import com.effektif.workflow.impl.json.JsonObjectReader;
-import com.effektif.workflow.impl.json.JsonStreamMapper;
-import com.effektif.workflow.impl.json.JsonTypeMapper;
-import com.effektif.workflow.impl.json.PolymorphicMapping;
-import com.effektif.workflow.impl.json.TypeMapping;
+import com.effektif.workflow.impl.json.*;
 import com.effektif.workflow.impl.json.types.LocalDateTimeStreamMapper;
+import com.effektif.workflow.impl.workflow.boundary.BoundaryEventTimer;
+import org.joda.time.LocalDateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.*;
+
+import static com.effektif.workflow.impl.bpmn.Bpmn.*;
 
 /**
  * This implementation of the BPMN reader is based on reading single values from XML elements and attributes into
@@ -116,10 +100,12 @@ public class BpmnReaderImpl implements BpmnReader {
       Iterator<XmlElement> iterator = definitionsXml.elements.iterator();
       while (iterator.hasNext()) {
         XmlElement definitionElement = iterator.next();
-        boolean processAlreadyParsed = workflow != null;
+//        boolean processAlreadyParsed = workflow != null;
+        boolean processAlreadyParsed = false; //workflow != null;
+
         if (definitionElement.is(BPMN_URI, "process") && !processAlreadyParsed) {
           iterator.remove();
-          workflow = readWorkflow(definitionElement);
+          workflow = readWorkflow(definitionElement, workflow);
         }
       }
     }
@@ -145,8 +131,11 @@ public class BpmnReaderImpl implements BpmnReader {
     }
   }
 
-  protected AbstractWorkflow readWorkflow(XmlElement processXml) {
-    AbstractWorkflow workflow = new ExecutableWorkflow();
+  protected AbstractWorkflow readWorkflow(XmlElement processXml, AbstractWorkflow inputWorkflow) {
+    AbstractWorkflow workflow;
+    if (inputWorkflow == null) workflow = new ExecutableWorkflow();
+    else workflow = inputWorkflow;
+
     this.currentXml = processXml;
     this.scope = workflow;
     workflow.readBpmn(this);
@@ -181,6 +170,16 @@ public class BpmnReaderImpl implements BpmnReader {
         }
       }
     }
+
+//    // Move the Startevent timer to workflow level
+//    for (Activity activity : workflow.getActivities()) {
+//      if (activity instanceof StartEvent) {
+//        if (activity.getTimers() != null && activity.getTimers().size() > 0) {
+//          workflow.getTimers().addAll(activity.getTimers());
+//          activity.setTimers(null);
+//        }
+//      }
+//    }
   }
 
   protected void readLanes(AbstractWorkflow workflow) {
@@ -201,14 +200,6 @@ public class BpmnReaderImpl implements BpmnReader {
           // Remove the sequenceFlow as it has been parsed in the model.
           iterator.remove();
         } else if (scopeElement.is(BPMN_URI, "boundaryEvent")) {
-
-//          <bpmn:boundaryEvent id="BoundaryEvent_1ymyt09" attachedToRef="Task_02wgtff">
-//            <bpmn:outgoing>SequenceFlow_0se37xg</bpmn:outgoing>
-//            <bpmn:timerEventDefinition>
-//              <bpmn:timeDuration>PT5M</bpmn:timeDuration>
-//            </bpmn:timerEventDefinition>
-//          </bpmn:boundaryEvent>
-//          <bpmn:sequenceFlow id="SequenceFlow_0se37xg" sourceRef="BoundaryEvent_1ymyt09" targetRef="Task_13koiv2" />
 
           startElement(scopeElement);
           BoundaryEvent boundaryEvent = new BoundaryEvent();
@@ -231,6 +222,15 @@ public class BpmnReaderImpl implements BpmnReader {
 
           iterator.remove();
           endElement();
+//        } else if (scopeElement.is(BPMN_URI, "timerEventDefinition")) {
+//          if ("startEvent".equals(scopeElement.parent.getLocalBPMNName())) {
+////            StartEventTimer timer = new StartEventTimer();
+////            timer.readBpmn(this);
+////            this.scope.timer(timer);
+//            System.out.println("");
+//          }
+//          // todo: also add boundaryEventTimer here?
+//          iterator.remove();
         } else {
           BpmnTypeMapping bpmnTypeMapping = getBpmnTypeMapping();
           if (bpmnTypeMapping != null) {

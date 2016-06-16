@@ -1,1 +1,2 @@
 com.effektif.workflow.impl.workflow.boundary.BoundaryEventTimerImpl
+com.effektif.workflow.impl.workflow.starteventtimer.StartEventTimerImpl

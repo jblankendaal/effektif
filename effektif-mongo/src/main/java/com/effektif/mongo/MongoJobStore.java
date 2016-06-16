@@ -25,15 +25,12 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.effektif.workflow.impl.job.*;
 import org.bson.types.ObjectId;
 
 import com.effektif.workflow.api.model.WorkflowInstanceId;
 import com.effektif.workflow.impl.configuration.Brewable;
 import com.effektif.workflow.impl.configuration.Brewery;
-import com.effektif.workflow.impl.job.Job;
-import com.effektif.workflow.impl.job.JobExecution;
-import com.effektif.workflow.impl.job.JobQuery;
-import com.effektif.workflow.impl.job.JobStore;
 import com.effektif.workflow.impl.util.Time;
 import com.effektif.workflow.impl.workflowinstance.LockImpl;
 import com.mongodb.BasicDBObject;
@@ -59,10 +56,14 @@ public class MongoJobStore implements JobStore, Brewable {
   }
   
   public void saveJob(Job job) {
+    if (job.key == null) job.key = new ObjectId().toString();
+
     BasicDBObject dbJob = writeJob(job);
-    if (job.key!=null) {
+
+    if (job.id!=null) {
       BasicDBObject query = new BasicDBObject(KEY, job.key);
-      jobsCollection.update("insert-job-with-key", query, dbJob, true, false);
+//      BasicDBObject query = new BasicDBObject(_ID, job.id);
+      jobsCollection.update("update-job-with-key", query, dbJob, true, false);
     } else {
       jobsCollection.save("save-job", dbJob);
     }
@@ -93,6 +94,12 @@ public class MongoJobStore implements JobStore, Brewable {
     return lockNextJob(query);
   }
 
+  @Override
+  public Job lockJobById(String jobId) {
+    DBObject query = createDbQuery(new JobQuery().jobId(jobId));
+    return lockNextJob(query);
+  }
+
   public Job lockNextJob(DBObject query) {
     DBObject dbLock = BasicDBObjectBuilder.start()
       .append(TIME, Time.now().toDate())
@@ -115,11 +122,32 @@ public class MongoJobStore implements JobStore, Brewable {
         new BasicDBObject(DUE_DATE, new BasicDBObject("$exists", false)),
         new BasicDBObject(DUE_DATE, new BasicDBObject("$lte", now))
       })
+      .push(LOCK).append("$exists", false).pop()
       .push(DONE).append("$exists", false).pop();
   }
 
   public Job readJob(BasicDBObject dbJob) {
-    return mongoMapper.read(dbJob, Job.class);
+
+    Job job = new Job();
+//    job.id = readId(dbJob, _ID);
+    job.key = readString(dbJob, KEY);
+    job.workflowId = readWorkflowId(dbJob, WORKFLOW_ID);
+    job.activityId = readString(dbJob, ACTIVITY_ID);
+    job.done = readTime(dbJob, DONE);
+    job.dueDate = readTime(dbJob, DUE_DATE);
+    readLock(job, (BasicDBObject) dbJob.get("lock"));
+    job.dead = readBoolean(dbJob, DEAD);
+    readJobType(job, (BasicDBObject) dbJob.get("jobType"));
+
+    job.executions = new LinkedList<>();
+    List<BasicDBObject> jobExecutions = readList(dbJob, EXECUTIONS);
+    for (BasicDBObject jobExecution: jobExecutions) {
+      JobExecution jobE = mongoMapper.read(jobExecution, JobExecution.class);
+      job.executions.add(jobE);
+    }
+
+    //return mongoMapper.read(dbJob, Job.class);
+    return job;
   }
   
   public void readExecutions(Job job, List<BasicDBObject> dbExecutions) {
@@ -141,6 +169,13 @@ public class MongoJobStore implements JobStore, Brewable {
       job.lock = new LockImpl();
       job.lock.time = readTime(dbLock, TIME);
       job.lock.owner = readString(dbLock, OWNER);
+    }
+  }
+
+  public void readJobType(Job job, BasicDBObject dbJobType) {
+    if (dbJobType!=null) {
+//      JobType jobType = mongoMapper.read(dbJobType, JobType.class);
+      job.jobType = mongoMapper.read(dbJobType, JobType.class);
     }
   }
 
@@ -187,6 +222,11 @@ public class MongoJobStore implements JobStore, Brewable {
     return findJobs(this.jobsCollection, new JobQuery());
   }
 
+  @Override
+  public List<Job> findJobs(JobQuery query) {
+    return findJobs(this.jobsCollection, query);
+  }
+
   protected List<Job> findJobs(MongoCollection collection, JobQuery jobQuery) {
     List<Job> jobs = new ArrayList<Job>();
     BasicDBObject query = createDbQuery(jobQuery);
@@ -207,6 +247,9 @@ public class MongoJobStore implements JobStore, Brewable {
     // TODO use MongoQuery filterOrganization(dbQuery, JobFields.organizationId);
     if (query.getJobId()!=null) {
       dbQuery.append(_ID, new ObjectId(query.getJobId()));
+    }
+    if (query.getWorkflowId() != null) {
+      dbQuery.append(WORKFLOW_ID, new ObjectId(query.getWorkflowId().getInternal()));
     }
     return dbQuery;
   }

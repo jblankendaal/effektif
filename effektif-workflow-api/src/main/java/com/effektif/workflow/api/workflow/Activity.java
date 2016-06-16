@@ -32,7 +32,7 @@ import com.effektif.workflow.api.types.DataType;
  * @author Tom Baeyens
  */
 public abstract class Activity extends Scope {
-  
+
   protected String id;
   protected String defaultTransitionId;
   protected MultiInstance multiInstance;
@@ -44,7 +44,6 @@ public abstract class Activity extends Scope {
   
   @Override
   public void readBpmn(BpmnReader r) {
-    super.readBpmn(r);
     id = r.readStringAttributeBpmn("id");
     defaultTransitionId = r.readStringAttributeEffektif("defaultTransitionId");
     r.startExtensionElements();
@@ -98,6 +97,8 @@ public abstract class Activity extends Scope {
     }
 
     r.endExtensionElements();
+
+    super.readBpmn(r);
   }
 
   @Override
