@@ -111,50 +111,19 @@ public class WorkflowEngineImpl implements WorkflowEngine, Brewable {
       }
       workflowCache.put(workflowImpl);
 
-      // Add job based on StartEventTimer in this workflow.
-//      if (workflowImpl.getTimers() != null) {
-//        for (TimerImpl timer : workflowImpl.getTimers()) {
-//          if (timer.timer instanceof StartEventTimer) {
-//            Job job = timer.createJob(workflowImpl, (StartEventTimer) timer.timer);
-//
-//            if (job != null) {
-//              JobServiceImpl jobService = configuration.get(JobServiceImpl.class);
-//              jobService.saveJob(job);
-//            }
-//          }
-//        }
-//      }
-
       if (workflowImpl.activities != null) {
         for (ActivityImpl activity : workflowImpl.activities.values()) {
-          if (activity.activity instanceof StartEvent && activity.getTimers() != null) {
-
-            Iterator<TimerImpl> timers = activity.getTimers().iterator();
-
-            while (timers.hasNext()) {
-              TimerImpl timer = timers.next();
-
-              if (timer.timer instanceof StartEventTimer) {
-                Job job = timer.createJob(activity);
+          if (activity.getTimers() != null) {
+            for (TimerImpl timer : activity.getTimers()) {
+              if (timer.timerType.isWorkflowTimer()) {
+                Job job = timer.createWorkflowJob(activity);
 
                 if (job != null) {
                   JobServiceImpl jobService = configuration.get(JobServiceImpl.class);
                   jobService.saveJob(job);
-//                  timers.remove();
                 }
               }
             }
-
-//            for (TimerImpl timer : activity.getTimers()) {
-//              if (timer.timer instanceof StartEventTimer) {
-//                Job job = timer.createJob(activity);
-//
-//                if (job != null) {
-//                  JobServiceImpl jobService = configuration.get(JobServiceImpl.class);
-//                  jobService.saveJob(job);
-//                }
-//              }
-//            }
           }
         }
       }

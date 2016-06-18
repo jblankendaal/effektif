@@ -18,7 +18,6 @@ package com.effektif.mongo;
 import static com.effektif.mongo.ActivityInstanceFields.*;
 import static com.effektif.mongo.MongoDb._ID;
 import static com.effektif.mongo.MongoHelper.*;
-import static com.effektif.mongo.ScopeInstanceFields.*;
 import static com.effektif.mongo.WorkflowInstanceFields.*;
 
 import java.util.ArrayList;
@@ -30,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
+import com.effektif.workflow.api.types.TextType;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 
@@ -106,7 +106,7 @@ public class MongoWorkflowInstanceStore implements WorkflowInstanceStore, Brewab
 
   @Override
   public void flush(WorkflowInstanceImpl workflowInstance) {
-    if (log.isDebugEnabled()) log.debug("Flushing workflow instance...");
+//    if (log.isDebugEnabled()) log.debug("Flushing workflow instance...");
 
     WorkflowInstanceUpdates updates = workflowInstance.getUpdates();
     
@@ -204,6 +204,7 @@ public class MongoWorkflowInstanceStore implements WorkflowInstanceStore, Brewab
       update.append("$unset", unsets);
     }
     if (!update.isEmpty()) {
+      log.debug("--> workflowInstance flush, $oid: " + workflowInstance.getId().getInternal());     //jb
       workflowInstancesCollection.update("flush-workflow-instance", query, update, false, false);
     }
     
@@ -356,6 +357,8 @@ public class MongoWorkflowInstanceStore implements WorkflowInstanceStore, Brewab
         .append(ARCHIVED_ACTIVITY_INSTANCES, false);
 
     BasicDBObject dbWorkflowInstance = workflowInstancesCollection.findAndModify("lock-workflow-instance", query, update, retrieveFields, new BasicDBObject(START, 1), false, true, false);
+//    BasicDBObject dbWorkflowInstance = workflowInstancesCollection.findAndModify("lock-workflow-instance", query, update, retrieveFields);
+
     if (dbWorkflowInstance==null) {
       return null;
     }
@@ -602,6 +605,19 @@ public class MongoWorkflowInstanceStore implements WorkflowInstanceStore, Brewab
   protected void writeVariableInstances(BasicDBObject dbScope, ScopeInstanceImpl scope) {
     if (scope.variableInstances!=null) {
       for (VariableInstanceImpl variableInstanceImpl: scope.variableInstances) {
+
+        // todo:
+        // Pls remove this hack
+        if((variableInstanceImpl.getType().getDataType() instanceof TextType) && variableInstanceImpl.getValue() != null) {
+
+          if (!String.class.equals(variableInstanceImpl.getValue().getClass())) {
+            log.debug("Changing datatype from " + variableInstanceImpl.getValue().getClass().toString() + " to " + String.class.toString() + ". Value: " + variableInstanceImpl.toString());
+          }
+
+          variableInstanceImpl.setValue(variableInstanceImpl.getValue().toString());
+        }
+        // until here
+
         VariableInstance variableInstance = variableInstanceImpl.toVariableInstance();
         BasicDBObject dbVariable = mongoMapper.write(variableInstance);
         writeListElementOpt(dbScope, VARIABLE_INSTANCES, dbVariable);

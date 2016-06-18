@@ -30,6 +30,7 @@ public interface JobStore {
   List<Job> findJobs(JobQuery query);
 
   void deleteJobById(String jobId);
+  void deleteJob(Job job);
   void deleteJobByScope(WorkflowInstanceId workflowInstanceId, String activityInstanceId);
   void deleteAllJobs();
 
@@ -39,7 +40,6 @@ public interface JobStore {
   /** locks a job not having a {@link Job#lock} specified
    * and retrieves it from the store */
   Job lockNextJob();
-
-  Job lockJobById(String jobId);
+  Job lockJobByKey(String jobKey);
 
 }

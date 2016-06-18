@@ -38,6 +38,8 @@ import com.effektif.workflow.impl.activity.AbstractTriggerImpl;
 import com.effektif.workflow.impl.activity.ActivityType;
 import com.effektif.workflow.impl.conditions.ConditionImpl;
 import com.effektif.workflow.impl.data.DataTypeImpl;
+import com.effektif.workflow.impl.intermediate.IntermediateThrowEventTimerImpl;
+import com.effektif.workflow.impl.job.Job;
 import com.effektif.workflow.impl.job.JobType;
 import com.effektif.workflow.impl.job.TimerType;
 import com.effektif.workflow.impl.json.types.ArrayMapperFactory;
@@ -74,9 +76,13 @@ public class MappingsBuilder {
   public MappingsBuilder configureDefaults() {
     inline(Extensible.class, "properties");
     baseClass(Trigger.class);
+    baseClass(TimerType.class);
     baseClass(JobType.class);
-    subClasses(BoundaryEventTimerImpl.class); //todo: make this dynamic
-    subClasses(StartEventTimerImpl.class); //todo: make this dynamic
+
+    //todo: Make generic
+    subClass(BoundaryEventTimerImpl.class);
+    subClass(StartEventTimerImpl.class);
+    subClass(IntermediateThrowEventTimerImpl.class);
     baseClass(Activity.class);
     baseClass(Condition.class);
     baseClass(DataType.class, "name");

@@ -19,13 +19,11 @@ import static com.effektif.mongo.JobFields.*;
 import static com.effektif.mongo.MongoDb._ID;
 import static com.effektif.mongo.MongoHelper.*;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
+import com.effektif.workflow.impl.WorkflowEngineImpl;
 import com.effektif.workflow.impl.job.*;
+import com.mongodb.*;
 import org.bson.types.ObjectId;
 
 import com.effektif.workflow.api.model.WorkflowInstanceId;
@@ -33,10 +31,6 @@ import com.effektif.workflow.impl.configuration.Brewable;
 import com.effektif.workflow.impl.configuration.Brewery;
 import com.effektif.workflow.impl.util.Time;
 import com.effektif.workflow.impl.workflowinstance.LockImpl;
-import com.mongodb.BasicDBObject;
-import com.mongodb.BasicDBObjectBuilder;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 
 
 public class MongoJobStore implements JobStore, Brewable {
@@ -53,22 +47,23 @@ public class MongoJobStore implements JobStore, Brewable {
     this.jobsCollection = mongoDb.createCollection(mongoConfiguration.getJobsCollectionName());
     this.archivedJobsCollection = mongoDb.createCollection(mongoConfiguration.getJobsArchivedCollectionName());
     this.mongoMapper = brewery.get(MongoObjectMapper.class);
+
+    WorkflowEngineImpl workflowEngine = brewery.get(WorkflowEngineImpl.class);
+    lockOwner = workflowEngine.getId();
   }
-  
+
   public void saveJob(Job job) {
-    if (job.key == null) job.key = new ObjectId().toString();
+
+    if (job.key == null) {
+      job.key = new ObjectId().toString();
+    }
 
     BasicDBObject dbJob = writeJob(job);
+    BasicDBObject query = new BasicDBObject(KEY, dbJob.get(KEY));
+    jobsCollection.update("upsert-job", query, dbJob, true, false);
 
-    if (job.id!=null) {
-      BasicDBObject query = new BasicDBObject(KEY, job.key);
-//      BasicDBObject query = new BasicDBObject(_ID, job.id);
-      jobsCollection.update("update-job-with-key", query, dbJob, true, false);
-    } else {
-      jobsCollection.save("save-job", dbJob);
-    }
   }
-  
+
   public Iterator<String> getWorkflowInstanceIdsToLockForJobs() {
     DBObject query = buildLockNextJobQuery()
       .push(WORKFLOW_INSTANCE_ID).append("$exists", true).pop()
@@ -95,8 +90,11 @@ public class MongoJobStore implements JobStore, Brewable {
   }
 
   @Override
-  public Job lockJobById(String jobId) {
-    DBObject query = createDbQuery(new JobQuery().jobId(jobId));
+  public Job lockJobByKey(String key) {
+    BasicDBObject query = new BasicDBObject();
+    query.append(KEY, key);
+    query.append(LOCK, new BasicDBObject("$exists", false));
+
     return lockNextJob(query);
   }
 
@@ -127,29 +125,15 @@ public class MongoJobStore implements JobStore, Brewable {
   }
 
   public Job readJob(BasicDBObject dbJob) {
+    List<BasicDBObject> dbExecutions = (List<BasicDBObject>) dbJob.get(EXECUTIONS);
+    dbJob.remove(EXECUTIONS);
 
-    Job job = new Job();
-//    job.id = readId(dbJob, _ID);
-    job.key = readString(dbJob, KEY);
-    job.workflowId = readWorkflowId(dbJob, WORKFLOW_ID);
-    job.activityId = readString(dbJob, ACTIVITY_ID);
-    job.done = readTime(dbJob, DONE);
-    job.dueDate = readTime(dbJob, DUE_DATE);
-    readLock(job, (BasicDBObject) dbJob.get("lock"));
-    job.dead = readBoolean(dbJob, DEAD);
-    readJobType(job, (BasicDBObject) dbJob.get("jobType"));
+    Job job = mongoMapper.read(dbJob, Job.class);
+    if (dbExecutions != null && dbExecutions.size() > 0) readExecutions(job, dbExecutions);
 
-    job.executions = new LinkedList<>();
-    List<BasicDBObject> jobExecutions = readList(dbJob, EXECUTIONS);
-    for (BasicDBObject jobExecution: jobExecutions) {
-      JobExecution jobE = mongoMapper.read(jobExecution, JobExecution.class);
-      job.executions.add(jobE);
-    }
-
-    //return mongoMapper.read(dbJob, Job.class);
     return job;
   }
-  
+
   public void readExecutions(Job job, List<BasicDBObject> dbExecutions) {
     if (dbExecutions!=null && !dbExecutions.isEmpty()) {
       job.executions = new LinkedList<>();
@@ -161,21 +145,6 @@ public class MongoJobStore implements JobStore, Brewable {
         jobExecution.duration = readLong(dbJobExecution, DURATION);
         job.executions.add(jobExecution);
       }
-    }
-  }
-
-  public void readLock(Job job, BasicDBObject dbLock) {
-    if (dbLock!=null) {
-      job.lock = new LockImpl();
-      job.lock.time = readTime(dbLock, TIME);
-      job.lock.owner = readString(dbLock, OWNER);
-    }
-  }
-
-  public void readJobType(Job job, BasicDBObject dbJobType) {
-    if (dbJobType!=null) {
-//      JobType jobType = mongoMapper.read(dbJobType, JobType.class);
-      job.jobType = mongoMapper.read(dbJobType, JobType.class);
     }
   }
 
@@ -259,7 +228,21 @@ public class MongoJobStore implements JobStore, Brewable {
     BasicDBObject dbQuery = createDbQuery(new JobQuery().jobId(jobId));
     jobsCollection.remove("delete-job", dbQuery);
   }
-  
+
+  @Override
+  public void deleteJob(Job job) {
+    if (job.id != null) deleteJobById(job.id);
+    else {
+      if (job.key != null) {
+        BasicDBObject dbQuery = new BasicDBObject();
+        dbQuery.append(KEY, job.key);
+        jobsCollection.remove("delete-job-by-key", dbQuery);
+      } else {
+        throw new RuntimeException("either id or key of the job to delete should have a value.");
+      }
+    }
+  }
+
   @Override
   public void deleteJobByScope(WorkflowInstanceId workflowInstanceId, String activityInstanceId) {
     BasicDBObject dbQuery = new Query()

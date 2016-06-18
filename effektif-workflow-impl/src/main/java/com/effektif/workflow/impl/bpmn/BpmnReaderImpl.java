@@ -13,6 +13,7 @@
  * limitations under the License. */
 package com.effektif.workflow.impl.bpmn;
 
+import com.effektif.workflow.api.activities.NoneTask;
 import com.effektif.workflow.api.activities.StartEvent;
 import com.effektif.workflow.api.bpmn.BpmnReader;
 import com.effektif.workflow.api.bpmn.XmlElement;
@@ -170,16 +171,6 @@ public class BpmnReaderImpl implements BpmnReader {
         }
       }
     }
-
-//    // Move the Startevent timer to workflow level
-//    for (Activity activity : workflow.getActivities()) {
-//      if (activity instanceof StartEvent) {
-//        if (activity.getTimers() != null && activity.getTimers().size() > 0) {
-//          workflow.getTimers().addAll(activity.getTimers());
-//          activity.setTimers(null);
-//        }
-//      }
-//    }
   }
 
   protected void readLanes(AbstractWorkflow workflow) {
@@ -206,9 +197,8 @@ public class BpmnReaderImpl implements BpmnReader {
           boundaryEvent.readBpmn(this);
 
           for (XmlElement xmlElement : currentXml.getElements()) {
-            BpmnTypeMapping typeMapping = bpmnMappings.getBpmnTypeMapping(xmlElement, this);
 
-            if (typeMapping != null) {
+            if ("timerEventDefinition".equals(xmlElement.getLocalBPMNName())) {
               BoundaryEventTimer timer = new BoundaryEventTimer();
 
               startElement(xmlElement);
@@ -222,15 +212,7 @@ public class BpmnReaderImpl implements BpmnReader {
 
           iterator.remove();
           endElement();
-//        } else if (scopeElement.is(BPMN_URI, "timerEventDefinition")) {
-//          if ("startEvent".equals(scopeElement.parent.getLocalBPMNName())) {
-////            StartEventTimer timer = new StartEventTimer();
-////            timer.readBpmn(this);
-////            this.scope.timer(timer);
-//            System.out.println("");
-//          }
-//          // todo: also add boundaryEventTimer here?
-//          iterator.remove();
+
         } else {
           BpmnTypeMapping bpmnTypeMapping = getBpmnTypeMapping();
           if (bpmnTypeMapping != null) {
@@ -240,6 +222,13 @@ public class BpmnReaderImpl implements BpmnReader {
             scope.activity(activity);
             setUnparsedBpmn(activity, currentXml);
             // Remove the activity XML element as it has been parsed in the model.
+            iterator.remove();
+          } else {
+            // Default to NoneTask when activity was not registered.
+            Activity activity = new NoneTask();
+            activity.readBpmn(this);
+            scope.activity(activity);
+            setUnparsedBpmn(activity, currentXml);
             iterator.remove();
           }
         }

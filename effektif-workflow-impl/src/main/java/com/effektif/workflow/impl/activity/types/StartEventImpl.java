@@ -15,17 +15,15 @@
  */
 package com.effektif.workflow.impl.activity.types;
 
-import com.cronutils.model.Cron;
-import com.cronutils.model.CronType;
-import com.cronutils.model.definition.CronDefinitionBuilder;
-import com.cronutils.parser.CronParser;
 import com.effektif.workflow.api.activities.StartEvent;
 import com.effektif.workflow.api.workflow.Timer;
 import com.effektif.workflow.api.workflow.starteventtimer.StartEventTimer;
 import com.effektif.workflow.impl.WorkflowParser;
 import com.effektif.workflow.impl.activity.AbstractActivityType;
+import com.effektif.workflow.impl.util.Time;
 import com.effektif.workflow.impl.workflow.ActivityImpl;
 import com.effektif.workflow.impl.workflowinstance.ActivityInstanceImpl;
+import org.quartz.CronExpression;
 
 
 /**
@@ -47,11 +45,11 @@ public class StartEventImpl extends AbstractActivityType<StartEvent> {
           if (timer.getTimeCycleExpression() == null) {
             parser.addError("timeCycle not specified.");
           } else {
-            CronParser cronParser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX));
+
             try {
-              Cron cron = cronParser.parse(timer.getTimeCycleExpression());
-              cron.validate();
-            } catch (IllegalArgumentException ex) {
+              CronExpression cronExpression = new CronExpression(timer.getTimeCycleExpression());
+              if (cronExpression.getTimeAfter(Time.now().toDate()) == null) parser.addError("Error in timerEventDefinition: There is no future occurence for this expression.");
+            } catch (Exception ex) {
               parser.addError("Error in timerEventDefinition: " + ex.getMessage());
             }
           }

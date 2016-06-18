@@ -17,9 +17,6 @@ package com.effektif.workflow.api.workflow;
 
 
 import com.effektif.workflow.api.bpmn.BpmnReader;
-import com.effektif.workflow.api.bpmn.XmlElement;
-
-import java.util.List;
 
 /**
  * @author Tom Baeyens
@@ -27,9 +24,9 @@ import java.util.List;
 public class Timer {
 
   protected String id;
-  protected String dueDateExpression;
-  protected String repeatExpression;
-  protected String timeCycleExpression;
+  protected String timeDate; // bpmn:timeDate
+  protected String timeDuration;  // bpmn:timeDuration
+  protected String timeCycleExpression; //bpmn:timeCycle
 
   public void readBpmn(BpmnReader r) {
     //            <bpmn:timerEventDefinition>
@@ -41,8 +38,8 @@ public class Timer {
     //timeCycle -- not supported for now
     //timeDuration -- Interval/duration, ISO-8601 format for time interval representations
 
-    this.repeatExpression = r.readTextBpmn("timeDuration"); // ie P2DT5H30M
-    this.dueDateExpression = r.readTextBpmn("timeDate");  // ie 2016-04-11T14:13:14
+    this.timeDuration = r.readTextBpmn("timeDuration"); // ie P2DT5H30M
+    this.timeDate = r.readTextBpmn("timeDate");  // ie 2016-04-11T14:13:14
     this.timeCycleExpression = r.readTextBpmn("timeCycle"); // ie: R4/2016-03-11T14:13/PT5M - 4 times every 5 minutes, starting March 11th 14:13
   }
 
@@ -65,25 +62,25 @@ public class Timer {
     return this;
   }
 
-  public String getDueDateExpression() {
-    return this.dueDateExpression;
+  public String getTimeDate() {
+    return this.timeDate;
   }
-  public void setDueDateExpression(String dueDateExpression) {
-    this.dueDateExpression = dueDateExpression;
+  public void setTimeDate(String timeDate) {
+    this.timeDate = timeDate;
   }
   public Timer dueDateExpression(String dueDateExpression) {
-    this.dueDateExpression = dueDateExpression;
+    this.timeDate = dueDateExpression;
     return this;
   }
 
-  public String getRepeatExpression() {
-    return this.repeatExpression;
+  public String getTimeDuration() {
+    return this.timeDuration;
   }
-  public void setRepeatExpression(String repeatExpression) {
-    this.repeatExpression = repeatExpression;
+  public void setTimeDuration(String timeDuration) {
+    this.timeDuration = timeDuration;
   }
   public Timer repeat(String repeatExpression) {
-    this.repeatExpression = repeatExpression;
+    this.timeDuration = repeatExpression;
     return this;
   }
 }

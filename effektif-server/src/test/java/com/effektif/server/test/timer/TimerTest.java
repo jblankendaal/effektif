@@ -15,7 +15,6 @@
  */
 package com.effektif.server.test.timer;
 
-import com.effektif.mongo.MongoConfiguration;
 import com.effektif.workflow.api.workflow.ExecutableWorkflow;
 import com.effektif.workflow.api.workflowinstance.WorkflowInstance;
 import com.effektif.workflow.impl.bpmn.BpmnMapper;
@@ -28,9 +27,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.Duration;
-import java.time.format.DateTimeFormatterBuilder;
-import java.util.regex.Pattern;
 
 
 /**
@@ -43,7 +39,7 @@ public class TimerTest extends WorkflowTest {
 //    ExecutableWorkflow workflow = new ExecutableWorkflow()
 //      .activity("r", new ReceiveTask()
 //        .timer(new BoundaryEventTimer()
-//          .dueDateExpression("0 minutes")));
+//          .timeDate("0 minutes")));
 //
 //    deploy(workflow);
 //
@@ -81,16 +77,35 @@ public class TimerTest extends WorkflowTest {
       deploy(workflow);
 
       WorkflowInstance workflowInstance = start(workflow);
+//      Thread.sleep(120*1000);
+//      WorkflowInstance workflowInstance = start(workflow);
+
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+//  @Test
+  public void testBpmnIntermediateCatchEvent () {
+
+    String fileName = "workflows/IntermediateCatchEvent.bpmn.xml";
+
+    try {
+      ExecutableWorkflow workflow = readFlowFromFile(fileName);
+      workflow.setId(null);
+      deploy(workflow);
+
+//      WorkflowInstance workflowInstance = start(workflow);
+
 //      Thread.sleep(60*1000);
 //      WorkflowInstance workflowInstance = start(workflow);
 
     } catch (Exception e) {
       e.printStackTrace();
     }
-
   }
 
-  @Test
+//    @Test
   public void testSomeBpmn () {
 
     String fileName = "workflows/TwoFlows.bpmn.xml";

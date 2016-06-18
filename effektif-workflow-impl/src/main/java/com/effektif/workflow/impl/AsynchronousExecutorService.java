@@ -54,7 +54,7 @@ public class AsynchronousExecutorService implements ExecutorService, Brewable {
 
   @Override
   public void execute(Runnable command) {
-    if (log.isDebugEnabled()) log.debug("Command executes asynchronous: "+command);
+//    if (log.isDebugEnabled()) log.debug("Command executes asynchronous: "+command);
     executor.execute(command);
   }
 
@@ -72,8 +72,9 @@ public class AsynchronousExecutorService implements ExecutorService, Brewable {
       if (!((ScheduledExecutorService)executor).isShutdown()) {
         try {
           ScheduledExecutorService scheduledExecutorService = (ScheduledExecutorService) executor;
-          if (log.isDebugEnabled())
-            log.debug("shutting down executor "+executor);
+
+          log.debug("shutting down executor "+executor);
+
           scheduledExecutorService.shutdown();
           scheduledExecutorService.awaitTermination(shutdownTimeout, shutdownTimeUnit);
         } catch (InterruptedException e) {

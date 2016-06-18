@@ -36,6 +36,7 @@ public class JobExecution implements JobController {
   public String logs;
   public LocalDateTime time;
   public Long duration;
+  @JsonIgnore
   public Configuration configuration;
 
   public JobExecution() {

@@ -15,13 +15,7 @@
  */
 package com.effektif.workflow.impl.workflow;
 
-import com.cronutils.model.Cron;
-import com.cronutils.model.CronType;
-import com.cronutils.model.definition.CronDefinitionBuilder;
-import com.cronutils.model.time.ExecutionTime;
-import com.cronutils.parser.CronParser;
 import com.effektif.workflow.api.Configuration;
-import com.effektif.workflow.api.activities.StartEvent;
 import com.effektif.workflow.api.workflow.Timer;
 import com.effektif.workflow.impl.WorkflowParser;
 import com.effektif.workflow.impl.job.Job;
@@ -29,14 +23,20 @@ import com.effektif.workflow.impl.job.TimerType;
 import com.effektif.workflow.impl.job.TimerTypeService;
 import com.effektif.workflow.impl.util.Time;
 import com.effektif.workflow.impl.workflowinstance.ScopeInstanceImpl;
-import org.joda.time.DateTime;
 import org.joda.time.LocalDateTime;
 import org.joda.time.format.ISODateTimeFormat;
+import org.quartz.CronExpression;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.UUID;
 
 /**
  * @author Tom Baeyens
  */
 public class TimerImpl {
+
+  public static final Logger log = LoggerFactory.getLogger(TimerImpl.class);
 
   public String id;
   public ScopeImpl parent;
@@ -54,8 +54,22 @@ public class TimerImpl {
       this.workflow = parentImpl.workflow;
     }
 
-    if (timer.getRepeatExpression() != null && timer.getDueDateExpression() != null) {
-      parser.addError("TimeDuration and TimeDate on TimerEventDefinition are both set, but mutually exclusive, please remove one of them.");
+    // Check that only one of the expressions are not null
+    int expressionCount = 0;
+    if (timer.getTimeDate() != null) expressionCount++;
+    if (timer.getTimeCycleExpression() != null) expressionCount++;
+    if (timer.getTimeDuration() != null) expressionCount++;
+
+    if (expressionCount > 1) {
+      parser.addError("TimeDuration, TimeCycle and TimeDate are mutually exclusive, but more than one is set. Please remove one of them.");
+    } else if (expressionCount == 0) {
+      parser.addError("timeDuration, timeCycle or timeDate should be set on a timerEventDefinition. None is set currently.");
+    }
+
+    try {
+      calculateDueDate();
+    } catch (RuntimeException ex) {
+      parser.addError("Error in timer expression, message: " + ex.getMessage());
     }
 
     TimerTypeService timerTypeService = parser.getConfiguration(TimerTypeService.class);
@@ -84,17 +98,23 @@ public class TimerImpl {
     return job;
   }
 
-  public Job createJob(ActivityImpl startActivity) {
-
-    if (startActivity.activity instanceof StartEvent) {
-      Job job = new Job();
-      job.workflowId = startActivity.workflow.id;
-      job.activityId = startActivity.id;
-      job.dueDate = calculateDueDate();
-      job.jobType = timerType.getJobType(null, this);
-      return job;
+  public Job createWorkflowJob(ActivityImpl startActivity) {
+    if (timerType.isWorkflowTimer()) {
+      LocalDateTime dueDate = calculateDueDate();
+      if (dueDate != null) {
+        Job job = new Job();
+        job.key = UUID.randomUUID().toString();
+        job.workflowId = startActivity.workflow.id;
+        job.activityId = startActivity.id;
+        job.dueDate = calculateDueDate();
+        job.jobType = timerType.getJobType(null, this);
+        return job;
+      } else {
+        log.warn("Not setting a workflow timer because the calculated duedate is null.");
+        return null;
+      }
     } else {
-      throw new RuntimeException("Job can only be created from a StartEvent type activity.");
+      throw new RuntimeException("Attached timer is not a workflow timer.");
     }
   }
 
@@ -102,36 +122,33 @@ public class TimerImpl {
 
 //    String[] parts2 = "R4/2016-03-11T14:13/PT5M".split("[/]");
 
-    if (timer.getRepeatExpression() != null) {
+    if (timer.getTimeDuration() != null) {
       try {
-
-        int seconds = (int) java.time.Duration.parse(timer.getRepeatExpression()).getSeconds();
+        int seconds = (int) java.time.Duration.parse(timer.getTimeDuration()).getSeconds();
 
         return Time.now().plusSeconds(seconds);
       } catch (Exception ex) {
-        throw new RuntimeException("Expression: " + timer.getRepeatExpression(), ex);
+        throw new RuntimeException("Expression: " + timer.getTimeDuration(), ex);
       }
-    } else if (timer.getDueDateExpression() != null) {
+    } else if (timer.getTimeDate() != null) {
       try {
-        return ISODateTimeFormat.dateTime().parseDateTime(timer.getDueDateExpression()).toLocalDateTime();
+        return ISODateTimeFormat.dateTime().parseDateTime(timer.getTimeDate()).toLocalDateTime();
       } catch (Exception ex) {
-        throw new RuntimeException("Error parsing duedate: " + timer.getDueDateExpression(), ex);
+        throw new RuntimeException("Error parsing duedate: " + timer.getTimeDate(), ex);
       }
     } else if (timer.getTimeCycleExpression() != null) {
-      CronParser cronParser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX));
-      try {
-        Cron cron = cronParser.parse(timer.getTimeCycleExpression());
-        cron.validate();
-        ExecutionTime executionTime = ExecutionTime.forCron(cronParser.parse(timer.getTimeCycleExpression()));
 
-        return executionTime.nextExecution(Time.now().toDateTime()).toLocalDateTime();
-      } catch (IllegalArgumentException ex) {
+      /* http://www.quartz-scheduler.org/documentation/quartz-2.x/tutorials/tutorial-lesson-06.html */
+      try {
+        CronExpression cronExpression = new CronExpression(timer.getTimeCycleExpression());
+        return new LocalDateTime(cronExpression.getTimeAfter(Time.now().toDate()));
+        //return cronExpression.getTimeAfter(Time.now().toDateTime()).toLocalDateTime();
+      } catch (Exception ex) {
         throw new RuntimeException("Error parsing cronexpression: " + timer.getTimeCycleExpression(), ex);
       }
     }
 
     return null;
   }
-
 }
 

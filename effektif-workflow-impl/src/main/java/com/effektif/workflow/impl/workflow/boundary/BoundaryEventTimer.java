@@ -32,7 +32,7 @@ import java.util.Set;
  */
 
 @TypeName("boundaryEventTimer")
-@BpmnElement("timerEventDefinition")
+//@BpmnElement("timerEventDefinition")
 public class BoundaryEventTimer extends Timer {
 
   public BoundaryEvent boundaryEvent;

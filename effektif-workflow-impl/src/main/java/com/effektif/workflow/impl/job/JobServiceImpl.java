@@ -38,7 +38,7 @@ import com.effektif.workflow.impl.workflowinstance.WorkflowInstanceImpl;
 /**
  * @author Tom Baeyens
  */
-public class JobServiceImpl implements JobService, Brewable, Startable {
+public class JobServiceImpl implements JobService, Brewable {
   
   private static final Logger log = LoggerFactory.getLogger(JobServiceImpl.class);
   
@@ -54,7 +54,7 @@ public class JobServiceImpl implements JobService, Brewable, Startable {
   // runtime state
   public boolean isRunning = false;
   public Timer timer = null;
-  public Timer checkOtherJobsTimer = null;
+//  public Timer checkOtherJobsTimer = null;
   public JobServiceListener listener = null;
 
   private static JobServiceImpl jobServiceImpl = null;
@@ -83,12 +83,12 @@ public class JobServiceImpl implements JobService, Brewable, Startable {
       
       timer = new Timer("Job executor timer");
 
-//      keepDoing(new Runnable() {
-//        @Override
-//        public void run() {
-//          checkWorkflowInstanceJobs();
-//        }
-//      }, 100, checkInterval);
+      keepDoing(new Runnable() {
+        @Override
+        public void run() {
+          checkWorkflowInstanceJobs();
+        }
+      }, 100, checkInterval);
 
       keepDoing(new Runnable() {
         @Override
@@ -98,6 +98,8 @@ public class JobServiceImpl implements JobService, Brewable, Startable {
       }, 500, checkInterval);
 
       isRunning = true;
+
+      log.info("Jobservice activated the workflow- and workflowInstance timers.");
     }
   }
   
@@ -117,10 +119,10 @@ public class JobServiceImpl implements JobService, Brewable, Startable {
   }
 
   public void shutdown() {
+    isRunning = false;
     timer.cancel();
     timer.purge();
     executor.shutdown();
-    isRunning = false;
   }
 
   public boolean isRunning() {
@@ -137,12 +139,6 @@ public class JobServiceImpl implements JobService, Brewable, Startable {
         keepGoing = false;
       }
     }
-  }
-
-  @Override
-  public void start(Brewery brewery) {
-    log.info("Starting workflowInstance timers.");
-    this.startup();
   }
 
   public static void stop() {
@@ -170,7 +166,7 @@ public class JobServiceImpl implements JobService, Brewable, Startable {
       for (int i = 0; i < jobsArray.length; i++) {
         Job job = jobsArray[i];
         if(job.isDue()) {
-          log.debug("Jos is due, workflowInstanceId is: " + job.getWorkflowInstanceId() + ", jobId: " + job.getId());
+          log.debug("Jos is due, workflowInstanceId is: " + job.getWorkflowInstanceId());
           executeJob(new JobExecution(job, configuration, workflowInstance));
 
           if(job.isDone() | job.isDead()) {
@@ -218,7 +214,7 @@ public class JobServiceImpl implements JobService, Brewable, Startable {
   
   public void executeJob(JobExecution jobExecution) {
     Job job = jobExecution.job; 
-    log.debug("Executing job "+job.getDueDate().toString() + ", workflowId: " + job.workflowId);
+    log.debug("Executing workflow job " + job.getKey() + ", duedate: " + job.getDueDate().toString() + ", workflowId: " + job.workflowId);
     job.dueDate = null;
     job.lock = null;
     JobType jobType = job.jobType;

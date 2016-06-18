@@ -63,8 +63,6 @@ public class StartEventTimerImpl extends Timer implements TimerType, JobType  {
 
         WorkflowInstance workflowInstance = engine.start(trigger);
 
-        System.out.println("Workflow trigger, workflowInstance is: " + workflowInstance.getId().getInternal());
-
         // calculate new dueDate
         WorkflowImpl workflow = engine.getWorkflowImpl(job.workflowId);
 
@@ -80,14 +78,8 @@ public class StartEventTimerImpl extends Timer implements TimerType, JobType  {
         }
 
         if (timerImpl != null) {
-            job.dueDate = timerImpl.calculateDueDate();
-        } else {
-            job.dueDate = null;
-            job.setDead(true);
+            job.rescheduleFor(timerImpl.calculateDueDate());
         }
-//        job.dueDate = null;
-//        job.setDead(true);
-//        job.done = Time.now();
-        job.lock = null;
+
     }
 }

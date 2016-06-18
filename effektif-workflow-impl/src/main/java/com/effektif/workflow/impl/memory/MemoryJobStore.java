@@ -48,8 +48,14 @@ public class MemoryJobStore implements JobStore {
   }
 
   @Override
-  public Job lockJobById(String jobId) {
-    return jobs.remove(jobId);
+  public Job lockJobByKey(String key) {
+    for (Job job: jobs.values()) {
+      if (key.equals(job.getKey())) {
+        jobs.remove(job.id);
+        return job;
+      }
+    }
+    return null;
   }
 
   @Override
@@ -85,6 +91,11 @@ public class MemoryJobStore implements JobStore {
   @Override
   public void deleteJobById(String jobId) {
     jobs.remove(jobId);
+  }
+
+  @Override
+  public void deleteJob(Job job) {
+    deleteJobById(job.id);
   }
 
   @Override
