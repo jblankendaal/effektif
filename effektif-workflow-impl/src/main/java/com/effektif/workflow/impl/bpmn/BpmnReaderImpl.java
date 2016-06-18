@@ -223,13 +223,13 @@ public class BpmnReaderImpl implements BpmnReader {
             setUnparsedBpmn(activity, currentXml);
             // Remove the activity XML element as it has been parsed in the model.
             iterator.remove();
-          } else {
-            // Default to NoneTask when activity was not registered.
-            Activity activity = new NoneTask();
-            activity.readBpmn(this);
-            scope.activity(activity);
-            setUnparsedBpmn(activity, currentXml);
-            iterator.remove();
+//          } else {
+//            // Default to NoneTask when activity was not registered.
+//            Activity activity = new NoneTask();
+//            activity.readBpmn(this);
+//            scope.activity(activity);
+//            setUnparsedBpmn(activity, currentXml);
+//            iterator.remove();
           }
         }
 
